@@ -1,0 +1,40 @@
+name: Dienstplan aktualisieren
+
+on:
+  schedule:
+    - cron: '17 * * * *'   # jede Stunde (Minute 17)
+  workflow_dispatch:        # Knopf "Run workflow" fuer manuelles Aktualisieren
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Seite bauen
+        shell: pwsh
+        env:
+          ICS_URL: ${{ secrets.ICS_URL }}
+          PAGE_PASSWORD: ${{ secrets.PAGE_PASSWORD }}
+        run: ./build-github.ps1
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
