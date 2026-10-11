@@ -136,9 +136,13 @@
 /* Crew Call / Pickup (nur für Joel) */
 .crew { display: grid; gap: 10px; padding: 12px; border-radius: 12px; border: 1px dashed var(--gold); background: var(--gold-soft); }
 .crew > b { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
-.crew-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.crew label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
-.crew input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; }
+.crew-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.crew label { display: grid; gap: 4px; min-width: 0; font-size: 12px; font-weight: 600; color: var(--muted); }
+/* 16px verhindert das automatische Hineinzoomen auf dem iPhone; appearance: none macht die Zeitfelder schmal */
+.crew input { display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; height: 38px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; line-height: 1.2; -webkit-appearance: none; appearance: none; }
+.crew input[type="time"] { text-align: left; }
+.crew input[type="time"]::-webkit-date-and-time-value { text-align: left; }
 .crew input:focus { outline: none; border-color: var(--gold); }
 .crew .hint { margin: 0; font-size: 12px; color: var(--muted); }
 .crew .bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -295,11 +299,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 [hidden] { display: none !important; }
 /* Countdown */
 .countdown { display: grid; gap: 8px; }
-.countdown { gap: 6px; }
-.cd-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.cd { display: grid; justify-items: center; min-width: 44px; padding: 6px 6px 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); }
-.cd b { font-family: var(--font-data); font-size: 18px; font-weight: 600; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
-.cd small { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.countdown { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cd-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.cd { display: inline-flex; align-items: baseline; gap: 2px; padding: 3px 6px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); }
+.cd b { font-family: var(--font-data); font-size: 14px; font-weight: 600; line-height: 1.1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.cd small { font-size: 9px; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
 /* Ortszeit + Wetter */
 .local { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 14px; }
 .local:empty { display: none; }
