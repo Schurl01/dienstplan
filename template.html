@@ -56,6 +56,64 @@
   --plane: 20, 32, 51;
   color-scheme: light;
 }
+/* 🎃 Herbst & Halloween */
+:root[data-theme="autumn"] {
+  --bg: #1a0f1f; --bg-deep: #110913; --glow: #3a1a33;
+  --surface: rgba(255, 214, 170, 0.05); --surface-2: rgba(255, 214, 170, 0.08); --line: rgba(255, 214, 170, 0.13);
+  --ink: #f6e7d6; --muted: #b49a95; --gold: #f08a2c; --gold-soft: rgba(240, 138, 44, 0.17); --on-gold: #1a0f1f;
+  --land: #2a1a2c; --land-edge: rgba(255, 214, 170, 0.07); --grat: rgba(255, 214, 170, 0.04);
+  --live: #a6d36b; --live-soft: rgba(166, 211, 107, 0.14); --duty: #b48cff; --duty-soft: rgba(180, 140, 255, 0.16);
+  --sick: #ff7d8f; --sick-soft: rgba(255, 125, 143, 0.14); --plane: 240, 138, 44;
+  color-scheme: dark;
+}
+/* 🌅 Sonnenuntergang */
+:root[data-theme="sunset"] {
+  --bg: #2a1638; --bg-deep: #170b24; --glow: #9b3c63;
+  --surface: rgba(255, 236, 220, 0.07); --surface-2: rgba(255, 236, 220, 0.1); --line: rgba(255, 236, 220, 0.16);
+  --ink: #fff1e6; --muted: #d6b8c2; --gold: #ffb36b; --gold-soft: rgba(255, 179, 107, 0.18); --on-gold: #2a1638;
+  --land: #3d2350; --land-edge: rgba(255, 236, 220, 0.08); --grat: rgba(255, 236, 220, 0.05);
+  --live: #9be0c0; --live-soft: rgba(155, 224, 192, 0.14); --duty: #c8b4ff; --duty-soft: rgba(200, 180, 255, 0.17);
+  --sick: #ff8fa3; --sick-soft: rgba(255, 143, 163, 0.15); --plane: 255, 220, 190;
+  color-scheme: dark;
+}
+:root[data-theme="sunset"] body { background: radial-gradient(130% 75% at 50% -18%, #ef8a5c 0%, #c4506a 26%, #6e2c5f 52%, #2a1638 76%, #170b24 100%) fixed; background-color: #2a1638; }
+/* 🟨 Retro-Abflugtafel */
+:root[data-theme="retro"] {
+  --bg: #0b0b0c; --bg-deep: #050505; --glow: #18181b;
+  --surface: rgba(255, 255, 255, 0.035); --surface-2: rgba(255, 204, 0, 0.07); --line: rgba(255, 204, 0, 0.17);
+  --ink: #f2f2f2; --muted: #8d8d8d; --gold: #ffcc00; --gold-soft: rgba(255, 204, 0, 0.14); --on-gold: #0b0b0c;
+  --land: #1b1b1d; --land-edge: rgba(255, 204, 0, 0.1); --grat: rgba(255, 255, 255, 0.03);
+  --live: #4cd964; --live-soft: rgba(76, 217, 100, 0.14); --duty: #6fb7ff; --duty-soft: rgba(111, 183, 255, 0.15);
+  --sick: #ff5a5a; --sick-soft: rgba(255, 90, 90, 0.14); --plane: 255, 204, 0;
+  --font-display: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-theme="retro"] .panel, :root[data-theme="retro"] .cd, :root[data-theme="retro"] .day { border-radius: 6px; }
+:root[data-theme="retro"] h1, :root[data-theme="retro"] h2, :root[data-theme="retro"] .status-title { text-transform: uppercase; letter-spacing: 0.02em; font-weight: 600; }
+:root[data-theme="retro"] h1 { font-size: clamp(30px, 6vw, 50px); }
+:root[data-theme="retro"] .fno, :root[data-theme="retro"] .route .code { background: linear-gradient(180deg, #1a1a1a 0 49%, #000 51% 100%); padding: 1px 6px; border-radius: 3px; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06); }
+/* 📡 Cockpit-Radar */
+:root[data-theme="radar"] {
+  --bg: #04140f; --bg-deep: #020b08; --glow: #0b2a20;
+  --surface: rgba(120, 255, 190, 0.04); --surface-2: rgba(120, 255, 190, 0.07); --line: rgba(120, 255, 190, 0.16);
+  --ink: #d8ffe9; --muted: #6fa58a; --gold: #3dff9a; --gold-soft: rgba(61, 255, 154, 0.13); --on-gold: #02140c;
+  --land: #0b261c; --land-edge: rgba(61, 255, 154, 0.2); --grat: rgba(61, 255, 154, 0.07);
+  --live: #3dff9a; --live-soft: rgba(61, 255, 154, 0.14); --duty: #ffd34d; --duty-soft: rgba(255, 211, 77, 0.14);
+  --sick: #ff6b6b; --sick-soft: rgba(255, 107, 107, 0.14); --plane: 61, 255, 154;
+  --font-display: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-theme="radar"] h1, :root[data-theme="radar"] .status-title { text-shadow: 0 0 18px rgba(61, 255, 154, 0.35); }
+/* Design-Auswahl */
+.themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+@media (max-width: 420px) { .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { display: grid; gap: 6px; padding: 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; }
+.tile .sw { position: relative; height: 54px; border-radius: 8px; overflow: hidden; display: block; }
+.tile .sw i { position: absolute; left: 10px; bottom: 10px; width: 26px; height: 6px; border-radius: 3px; }
+.tile .sw em { position: absolute; right: 8px; top: 6px; font-style: normal; font-size: 18px; }
+.tile .nm { padding: 0 4px 2px; }
+.tile[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 * { box-sizing: border-box; }
 html { background: var(--bg-deep); }
 body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 45%, var(--bg-deep) 100%) fixed; background-color: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; min-height: 100vh; transition: background-color .3s, color .3s; }
@@ -354,11 +412,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   </div>
 
   <div class="set-group">
-    <span class="eyebrow">Darstellung</span>
-    <div class="theme" role="group" aria-label="Darstellung">
-      <button type="button" data-theme-set="light" aria-pressed="false">Hell</button>
-      <button type="button" data-theme-set="dark" aria-pressed="true">Dunkel</button>
-    </div>
+    <span class="eyebrow">Design</span>
+    <div class="themes" id="themes" role="group" aria-label="Design"></div>
   </div>
 
   <div class="set-group">
@@ -1073,71 +1128,213 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     } finally { btn.disabled = false; }
   });
 
-  // ---------- Hell / Dunkel ----------
-  var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', redrawSky = null;
-  function applyTheme(t) {
-    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
-    else document.documentElement.removeAttribute('data-theme');
-    document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === (t === 'light' ? 'light' : 'dark'))); });
-    planeRGB = getComputedStyle(document.documentElement).getPropertyValue('--plane').trim() || planeRGB;
-    if (redrawSky) redrawSky();
+  // ---------- Designs ----------
+  var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', sky = null, curTheme = 'dark';
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var THEMES = [
+    { id: 'dark', name: 'Nachtflug', bg: 'radial-gradient(120% 90% at 50% 0%, #1d2c4d, #070c17)', accent: '#d2b17c' },
+    { id: 'light', name: 'Tageslicht', bg: 'radial-gradient(120% 90% at 50% 0%, #ffffff, #dfe6ef)', accent: '#946b22' },
+    { id: 'autumn', name: 'Herbst & Halloween', bg: 'radial-gradient(120% 90% at 70% 10%, #4a2140, #110913)', accent: '#f08a2c', icon: '🎃' },
+    { id: 'sunset', name: 'Sonnenuntergang', bg: 'linear-gradient(180deg, #ef8a5c, #c4506a 40%, #2a1638)', accent: '#ffb36b', icon: '🌅' },
+    { id: 'retro', name: 'Abflugtafel', bg: 'repeating-linear-gradient(180deg, #111 0 9px, #000 9px 10px)', accent: '#ffcc00', icon: '🛫' },
+    { id: 'radar', name: 'Cockpit-Radar', bg: 'radial-gradient(circle at 50% 60%, #0f3a2b, #020b08 70%)', accent: '#3dff9a', icon: '📡' }
+  ];
+  function renderThemes() {
+    document.getElementById('themes').innerHTML = THEMES.map(function (t) {
+      return '<button type="button" class="tile" data-theme-set="' + t.id + '" aria-pressed="' + (t.id === curTheme) + '">' +
+        '<span class="sw" style="background:' + t.bg + '"><i style="background:' + t.accent + '"></i>' + (t.icon ? '<em>' + t.icon + '</em>' : '') + '</span>' +
+        '<span class="nm">' + esc(t.name) + '</span></button>';
+    }).join('');
   }
+  function applyTheme(t) {
+    if (!THEMES.some(function (x) { return x.id === t; })) t = 'dark';
+    curTheme = t;
+    if (t === 'dark') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+    document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === t)); });
+    planeRGB = getComputedStyle(document.documentElement).getPropertyValue('--plane').trim() || planeRGB;
+    if (sky) sky.setMode(t);
+    if (t === 'retro') flap();
+  }
+  // Fallblatt-Effekt: Flugnummern und Codes "klappern" durch, bis der richtige Text steht
+  function flap() {
+    if (reduce) return;
+    var CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    document.querySelectorAll('.fno, .route .code').forEach(function (el, i) {
+      if (el.getAttribute('data-flap')) return;
+      var final = el.textContent, steps = 10 + (i % 7), n = 0;
+      el.setAttribute('data-flap', '1');
+      var iv = setInterval(function () {
+        n++;
+        var settled = Math.floor(n / steps * final.length);
+        el.textContent = final.split('').map(function (ch, j) { return j < settled || ch === ' ' ? ch : CH[Math.floor(Math.random() * CH.length)]; }).join('');
+        if (n >= steps) { el.textContent = final; el.removeAttribute('data-flap'); clearInterval(iv); }
+      }, 60);
+    });
+  }
+  renderThemes();
   var savedTheme = null;
   try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
   applyTheme(savedTheme);
-  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var t = b.getAttribute('data-theme-set');
-      try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-      applyTheme(t);
-    });
+  document.getElementById('themes').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-theme-set]'); if (!b) return;
+    var t = b.getAttribute('data-theme-set');
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+    applyTheme(t);
   });
 
-  // ---------- Himmel mit Mini-Flugzeugen ----------
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  (function sky() {
-    var cv = document.getElementById('sky'), ctx = cv.getContext('2d'), planes = [], W = 0, H = 0, dpr = 1, last = 0, running = true;
+  // ---------- Animierter Hintergrund je nach Design ----------
+  sky = (function () {
+    var cv = document.getElementById('sky'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = 1, last = 0, running = true, clock = 0;
+    var mode = curTheme, planes = [], leaves = [], bats = [], clouds = [], blips = [], sweep = 0, batWait = 3;
     var shape = new Path2D(PLANE_PATH);
+    var LEAF = ['#e8742a', '#c94f1f', '#f2a93b', '#9c3d1a', '#d9862b', '#b5651d'];
+    function rgba(a) { return 'rgba(' + planeRGB + ',' + a + ')'; }
     function resize() {
       dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
       cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    function spawn(i, anywhere) {
+    function spawnPlane(i, anywhere) {
       var dir = i % 2 ? -1 : 1, size = 11 + Math.random() * 9;
       return { dir: dir, size: size, y: 40 + Math.random() * (H - 80), x: anywhere ? Math.random() * W : (dir > 0 ? -60 : W + 60),
         v: (5 + Math.random() * 9) * dir, drift: (Math.random() - 0.5) * 0.6, a: 0.14 + Math.random() * 0.22, trail: Math.random() < 0.6 ? 40 + Math.random() * 110 : 0 };
     }
+    function spawnLeaf(anywhere) {
+      return { x: Math.random() * W, y: anywhere ? Math.random() * H : -20, vy: 14 + Math.random() * 22, vx: -4 + Math.random() * 8, ph: Math.random() * 6.28,
+        rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 1.6, size: 6 + Math.random() * 8, col: LEAF[Math.floor(Math.random() * LEAF.length)], a: 0.22 + Math.random() * 0.3 };
+    }
+    function spawnCloud(anywhere) {
+      return { x: anywhere ? Math.random() * W : -320, y: 20 + Math.random() * H * 0.55, w: 140 + Math.random() * 240, h: 30 + Math.random() * 40, v: 3 + Math.random() * 6, a: 0.05 + Math.random() * 0.06 };
+    }
+    function setup() {
+      var small = W < 600, i;
+      planes = []; leaves = []; clouds = []; bats = []; blips = []; batWait = 2;
+      var nPlanes = mode === 'radar' ? 0 : mode === 'autumn' ? (small ? 2 : 3) : (small ? 6 : 10);
+      for (i = 0; i < nPlanes; i++) planes.push(spawnPlane(i, true));
+      if (mode === 'autumn') for (i = 0; i < (small ? 16 : 30); i++) leaves.push(spawnLeaf(true));
+      if (mode === 'sunset') for (i = 0; i < (small ? 4 : 7); i++) clouds.push(spawnCloud(true));
+      if (mode === 'radar') for (i = 0; i < (small ? 10 : 18); i++) blips.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, lit: 0 });
+    }
+    function drawPlane(p) {
+      if (p.trail) {
+        var g = ctx.createLinearGradient(p.x, p.y, p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v));
+        g.addColorStop(0, rgba(p.a * 0.5)); g.addColorStop(1, rgba(0));
+        ctx.strokeStyle = g; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p.x - p.size * 0.5 * p.dir, p.y);
+        ctx.lineTo(p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v)); ctx.stroke();
+      }
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
+      var s = p.size / 24; ctx.scale(s, s); ctx.translate(-12, -12);
+      ctx.fillStyle = rgba(p.a); ctx.fill(shape); ctx.restore();
+    }
+    function drawLeaf(l) {
+      var s = l.size;
+      ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(l.rot); ctx.globalAlpha = l.a; ctx.fillStyle = l.col;
+      ctx.beginPath(); ctx.moveTo(0, -s); ctx.quadraticCurveTo(s * 0.9, -s * 0.2, 0, s); ctx.quadraticCurveTo(-s * 0.9, -s * 0.2, 0, -s); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(0, -s * 0.8); ctx.lineTo(0, s * 1.25); ctx.stroke();
+      ctx.restore();
+    }
+    function wing(side, wy) {
+      ctx.beginPath(); ctx.moveTo(side * 1, -0.6);
+      ctx.quadraticCurveTo(side * 5, -3.5 + wy, side * 9.5, -1.2 + wy);
+      ctx.quadraticCurveTo(side * 7.6, 0.2 + wy * 0.6, side * 6.6, 1.8 + wy * 0.3);
+      ctx.quadraticCurveTo(side * 5, 0.6, side * 3.6, 2.2);
+      ctx.quadraticCurveTo(side * 2.4, 1, side * 1, 1.4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    function drawBat(b) {
+      var wy = Math.sin(clock * 13 + b.ph) * 2.6;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.size, b.size);
+      ctx.fillStyle = '#07030a'; ctx.strokeStyle = 'rgba(240,138,44,0.55)'; ctx.lineWidth = 0.35;
+      ctx.beginPath(); ctx.ellipse(0, 0.4, 1.3, 2.1, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-0.9, -1.2); ctx.lineTo(-0.6, -2.6); ctx.lineTo(-0.1, -1.5); ctx.lineTo(0.1, -1.5); ctx.lineTo(0.6, -2.6); ctx.lineTo(0.9, -1.2); ctx.fill();
+      wing(-1, wy); wing(1, wy);
+      ctx.restore();
+    }
+    function drawMoon() {
+      var mx = W * 0.84, my = Math.min(130, H * 0.16), r = Math.min(52, W * 0.09);
+      var g = ctx.createRadialGradient(mx, my, r * 0.6, mx, my, r * 3.2);
+      g.addColorStop(0, 'rgba(255,200,140,0.10)'); g.addColorStop(1, 'rgba(255,200,140,0)');
+      ctx.fillStyle = g; ctx.fillRect(mx - r * 3.2, my - r * 3.2, r * 6.4, r * 6.4);
+      ctx.fillStyle = 'rgba(255,224,180,0.13)'; ctx.beginPath(); ctx.arc(mx, my, r, 0, 6.283); ctx.fill();
+      ctx.fillStyle = 'rgba(255,224,180,0.05)'; ctx.beginPath(); ctx.arc(mx - r * 0.3, my - r * 0.2, r * 0.22, 0, 6.283); ctx.arc(mx + r * 0.35, my + r * 0.3, r * 0.15, 0, 6.283); ctx.fill();
+    }
+    function drawCloud(c) {
+      ctx.save(); ctx.fillStyle = 'rgba(255,225,210,' + c.a + ')';
+      if ('filter' in ctx) ctx.filter = 'blur(10px)';
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, c.w * 0.5, c.h * 0.5, 0, 0, 6.283);
+      ctx.ellipse(c.x - c.w * 0.25, c.y + c.h * 0.15, c.w * 0.3, c.h * 0.4, 0, 0, 6.283);
+      ctx.ellipse(c.x + c.w * 0.28, c.y + c.h * 0.1, c.w * 0.32, c.h * 0.42, 0, 0, 6.283);
+      ctx.fill(); ctx.restore();
+    }
+    function drawRadar() {
+      var cx = W / 2, cy = H * 0.45, R = Math.hypot(W, H) / 2 + 40, r;
+      ctx.lineWidth = 1; ctx.strokeStyle = rgba(0.07);
+      for (r = 110; r < R; r += 110) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.283); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
+      if (ctx.createConicGradient) {
+        var g = ctx.createConicGradient(sweep - 0.9, cx, cy);
+        g.addColorStop(0, rgba(0)); g.addColorStop(0.1432, rgba(0.13)); g.addColorStop(0.1433, rgba(0)); g.addColorStop(1, rgba(0));
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      }
+      ctx.strokeStyle = rgba(0.35); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(sweep) * R, cy + Math.sin(sweep) * R); ctx.stroke();
+      blips.forEach(function (b) {
+        var a = 0.08 + b.lit * 0.75;
+        ctx.fillStyle = rgba(a); ctx.shadowColor = rgba(b.lit); ctx.shadowBlur = 10 * b.lit;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 2.4 + b.lit * 1.2, 0, 6.283); ctx.fill();
+      });
+      ctx.shadowBlur = 0;
+    }
     function draw() {
       ctx.clearRect(0, 0, W, H);
-      planes.forEach(function (p) {
-        if (p.trail) {
-          var g = ctx.createLinearGradient(p.x, p.y, p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v));
-          g.addColorStop(0, 'rgba(' + planeRGB + ',' + (p.a * 0.5) + ')'); g.addColorStop(1, 'rgba(' + planeRGB + ',0)');
-          ctx.strokeStyle = g; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p.x - p.size * 0.5 * p.dir, p.y);
-          ctx.lineTo(p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v)); ctx.stroke();
-        }
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
-        var s = p.size / 24; ctx.scale(s, s); ctx.translate(-12, -12);
-        ctx.fillStyle = 'rgba(' + planeRGB + ',' + p.a + ')'; ctx.fill(shape); ctx.restore();
-      });
+      if (mode === 'radar') { drawRadar(); return; }
+      if (mode === 'autumn') drawMoon();
+      clouds.forEach(drawCloud);
+      planes.forEach(drawPlane);
+      leaves.forEach(drawLeaf);
+      bats.forEach(drawBat);
     }
-    function tick(t) {
+    function step(dt) {
+      clock += dt;
+      planes.forEach(function (p, i) { p.x += p.v * dt; p.y += p.drift * dt; if (p.x > W + 80 || p.x < -80) planes[i] = spawnPlane(i, false); });
+      leaves.forEach(function (l, i) {
+        l.y += l.vy * dt; l.x += (l.vx + Math.sin(clock * 1.4 + l.ph) * 14) * dt; l.rot += l.vr * dt;
+        if (l.y > H + 20) leaves[i] = spawnLeaf(false);
+      });
+      clouds.forEach(function (c, i) { c.x += c.v * dt; if (c.x - c.w > W) clouds[i] = spawnCloud(false); });
+      if (mode === 'autumn') {
+        batWait -= dt;
+        if (batWait <= 0) {
+          batWait = 6 + Math.random() * 8;
+          var n = 1 + Math.floor(Math.random() * 3), y0 = 60 + Math.random() * H * 0.45;
+          for (var k = 0; k < n; k++) bats.push({ x: -30 - k * 40, y: y0 + k * 22, vx: 70 + Math.random() * 40, vy: (Math.random() - 0.5) * 16, size: 1.6 + Math.random() * 1.3, ph: Math.random() * 6.28 });
+        }
+        bats = bats.filter(function (b) { b.x += b.vx * dt; b.y += b.vy * dt + Math.sin(clock * 3 + b.ph) * 0.6; return b.x < W + 60; });
+      }
+      if (mode === 'radar') {
+        var prev = sweep; sweep = (sweep + 0.9 * dt) % 6.283;
+        var cx = W / 2, cy = H * 0.45;
+        blips.forEach(function (b) {
+          b.x += b.vx * dt; b.y += b.vy * dt;
+          if (b.x < 0) b.x += W; if (b.x > W) b.x -= W; if (b.y < 0) b.y += H; if (b.y > H) b.y -= H;
+          var ang = (Math.atan2(b.y - cy, b.x - cx) + 6.283) % 6.283;
+          var hit = prev <= sweep ? (ang > prev && ang <= sweep) : (ang > prev || ang <= sweep);
+          b.lit = hit ? 1 : Math.max(0, b.lit - dt * 0.45);
+        });
+      }
+    }
+    function loop(t) {
       if (!running) return;
       var dt = last ? Math.min(0.1, (t - last) / 1000) : 0; last = t;
-      planes.forEach(function (p, i) {
-        p.x += p.v * dt; p.y += p.drift * dt;
-        if (p.x > W + 80 || p.x < -80) planes[i] = spawn(i, false);
-      });
-      draw(); requestAnimationFrame(tick);
+      step(dt); draw(); requestAnimationFrame(loop);
     }
-    resize();
-    var count = W < 600 ? 6 : 10;
-    for (var i = 0; i < count; i++) planes.push(spawn(i, true));
-    addEventListener('resize', function () { resize(); if (reduce) draw(); });
-    redrawSky = draw;
-    if (reduce) { draw(); return; }
-    document.addEventListener('visibilitychange', function () { running = !document.hidden; last = 0; if (running) requestAnimationFrame(tick); });
-    requestAnimationFrame(tick);
+    resize(); setup();
+    var lastW = W;
+    addEventListener('resize', function () { resize(); if (W !== lastW) { lastW = W; setup(); } if (reduce) draw(); });
+    if (reduce) draw();
+    else {
+      document.addEventListener('visibilitychange', function () { running = !document.hidden; last = 0; if (running) requestAnimationFrame(loop); });
+      requestAnimationFrame(loop);
+    }
+    return { setMode: function (m) { mode = m; setup(); if (reduce) draw(); } };
   })();
 
   // ---------- Einstellungen: Fenster, Reihenfolge, Anzeige ----------
@@ -1355,6 +1552,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 
   if (events.length) renderCal();
   renderStatus(); renderStats(); renderFav(); renderChanges(); renderList(); renderMap();
+  if (curTheme === 'retro') flap();
   var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderMap, 200); });
   setInterval(function () { renderStatus(); renderMap(); }, 60000);
 })();

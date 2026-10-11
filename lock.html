@@ -5,11 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Joels Dienstplan</title>
-<script>try { if (localStorage.getItem('dienstplan-theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}</script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Manrope:wght@400;600&display=swap">
+<script>try { var t = localStorage.getItem('dienstplan-theme'); if (t && t !== 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,400&family=Manrope:wght@400;600&family=JetBrains+Mono:wght@600&display=swap">
 <style>
 :root { --bg: #0a1120; --glow: #14203a; --deep: #070c17; --ink: #ece4d4; --muted: #8f99ab; --gold: #d2b17c; --on-gold: #070c17; --field: rgba(236,228,212,0.05); --line: rgba(236,228,212,0.14); --sick: #e39aac; color-scheme: dark; }
 :root[data-theme="light"] { --bg: #eef2f7; --glow: #ffffff; --deep: #e3e9f1; --ink: #142033; --muted: #5b6678; --gold: #946b22; --on-gold: #ffffff; --field: rgba(255,255,255,0.8); --line: rgba(20,32,51,0.14); --sick: #b33a5a; color-scheme: light; }
+:root[data-theme="autumn"] { --bg: #1a0f1f; --glow: #3a1a33; --deep: #110913; --ink: #f6e7d6; --muted: #b49a95; --gold: #f08a2c; --on-gold: #1a0f1f; --field: rgba(255,214,170,0.06); --line: rgba(255,214,170,0.15); --sick: #ff7d8f; }
+:root[data-theme="sunset"] { --bg: #2a1638; --glow: #b24a66; --deep: #170b24; --ink: #fff1e6; --muted: #d6b8c2; --gold: #ffb36b; --on-gold: #2a1638; --field: rgba(255,236,220,0.08); --line: rgba(255,236,220,0.18); --sick: #ff8fa3; }
+:root[data-theme="retro"] { --bg: #0b0b0c; --glow: #18181b; --deep: #050505; --ink: #f2f2f2; --muted: #8d8d8d; --gold: #ffcc00; --on-gold: #0b0b0c; --field: rgba(255,255,255,0.04); --line: rgba(255,204,0,0.2); --sick: #ff5a5a; }
+:root[data-theme="radar"] { --bg: #04140f; --glow: #0b2a20; --deep: #020b08; --ink: #d8ffe9; --muted: #6fa58a; --gold: #3dff9a; --on-gold: #02140c; --field: rgba(120,255,190,0.05); --line: rgba(120,255,190,0.18); --sick: #ff6b6b; }
+:root[data-theme="retro"] h1, :root[data-theme="retro"] #takeoff .hello, :root[data-theme="radar"] h1, :root[data-theme="radar"] #takeoff .hello { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; text-transform: uppercase; letter-spacing: 0.02em; }
+:root[data-theme="retro"] #takeoff .hello em, :root[data-theme="radar"] #takeoff .hello em { font-style: normal; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 55%, var(--deep) 100%); background-color: var(--bg); color: var(--ink); font-family: "Manrope", "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; padding-inline: 16px; }
@@ -122,7 +128,9 @@ form.away { opacity: 0; transform: translateY(-16px); }
       var css = getComputedStyle(document.documentElement);
       var gold = css.getPropertyValue('--gold').trim() || '#d2b17c';
       var wrap = document.createElement('div'); wrap.id = 'takeoff';
-      wrap.innerHTML = '<div class="dim"></div><canvas></canvas><div class="hello">Willkommen<br><em>an Bord</em><small>Joels Dienstplan</small></div><div class="veil"></div>';
+      var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+      var sub = { autumn: '🎃 Happy Halloween · Joels Dienstplan', radar: 'Radarkontakt hergestellt', retro: 'Boarding · Joels Dienstplan', sunset: 'Guten Abend · Joels Dienstplan' }[theme] || 'Joels Dienstplan';
+      wrap.innerHTML = '<div class="dim"></div><canvas></canvas><div class="hello">Willkommen<br><em>an Bord</em><small>' + sub + '</small></div><div class="veil"></div>';
       document.body.appendChild(wrap);
       f.classList.add('away');
       var cv = wrap.querySelector('canvas'), ctx = cv.getContext('2d'), hello = wrap.querySelector('.hello'), veil = wrap.querySelector('.veil');
@@ -150,6 +158,18 @@ form.away { opacity: 0; transform: translateY(-16px); }
           ctx.globalAlpha = 1;
           var p = pt(t), q = pt(Math.min(1, t + 0.01)), ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
           var size = 30 + 40 * t;
+          if (theme === 'autumn') {
+            // Kürbis hängt an einer Leine unter dem Flugzeug
+            var sw = Math.sin(now / 260) * 0.25, len = size * 1.1, kx = p[0] + Math.sin(sw) * len, ky = p[1] + Math.cos(sw) * len, kr = size * 0.32;
+            ctx.strokeStyle = 'rgba(246,231,214,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(kx, ky - kr); ctx.stroke();
+            ctx.fillStyle = '#f08a2c'; ctx.shadowColor = '#f08a2c'; ctx.shadowBlur = 14;
+            ctx.beginPath(); ctx.ellipse(kx - kr * 0.45, ky, kr * 0.6, kr * 0.85, 0, 0, 6.283); ctx.ellipse(kx + kr * 0.45, ky, kr * 0.6, kr * 0.85, 0, 0, 6.283); ctx.ellipse(kx, ky, kr * 0.65, kr * 0.9, 0, 0, 6.283); ctx.fill();
+            ctx.shadowBlur = 0; ctx.fillStyle = '#4b8a2c'; ctx.fillRect(kx - kr * 0.1, ky - kr * 1.15, kr * 0.2, kr * 0.35);
+            ctx.fillStyle = '#ffd36b'; ctx.beginPath();
+            ctx.moveTo(kx - kr * 0.45, ky - kr * 0.25); ctx.lineTo(kx - kr * 0.2, ky - kr * 0.25); ctx.lineTo(kx - kr * 0.32, ky - kr * 0.48); ctx.closePath();
+            ctx.moveTo(kx + kr * 0.45, ky - kr * 0.25); ctx.lineTo(kx + kr * 0.2, ky - kr * 0.25); ctx.lineTo(kx + kr * 0.32, ky - kr * 0.48); ctx.closePath();
+            ctx.moveTo(kx - kr * 0.5, ky + kr * 0.2); ctx.lineTo(kx + kr * 0.5, ky + kr * 0.2); ctx.lineTo(kx, ky + kr * 0.55); ctx.closePath(); ctx.fill();
+          }
           ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(ang + Math.PI / 2); ctx.scale(size / 24, size / 24); ctx.translate(-12, -12);
           ctx.shadowColor = gold; ctx.shadowBlur = 12; ctx.fillStyle = gold; ctx.fill(PLANE); ctx.restore();
           if (x > 0.8 && !veil.classList.contains('on')) veil.classList.add('on');

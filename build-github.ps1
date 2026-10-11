@@ -107,8 +107,10 @@ $body = $template.Replace('__ICS_B64__', $b64).Replace('__LAND_JSON__', $landJso
 $head = '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
   '<meta name="robots" content="noindex">' +
-  '<script>try{if(localStorage.getItem("dienstplan-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>' +
-  '<style>html,body{margin:0}html{background:#0a1120}html[data-theme="light"]{background:#eef2f7}[hidden]{display:none!important}img{max-width:100%}</style></head><body>'
+  '<script>try{var t=localStorage.getItem("dienstplan-theme");if(t&&t!=="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>' +
+  '<style>html,body{margin:0}html{background:#0a1120}html[data-theme="light"]{background:#eef2f7}html[data-theme="autumn"]{background:#1a0f1f}' +
+  'html[data-theme="sunset"]{background:#2a1638}html[data-theme="retro"]{background:#0b0b0c}html[data-theme="radar"]{background:#04140f}' +
+  '[hidden]{display:none!important}img{max-width:100%}</style></head><body>'
 $html = $head + $body + '</body></html>'
 
 # --- Seite mit PAGE_PASSWORD verschluesseln, damit weder Webseite noch Build-Dateien den Plan im Klartext enthalten ---
