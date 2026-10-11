@@ -5,22 +5,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Joels Dienstplan</title>
+<script>try { if (localStorage.getItem('dienstplan-theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Manrope:wght@400;600&display=swap">
 <style>
-:root { --bg: #0a1120; --ink: #ece4d4; --muted: #8f99ab; --gold: #d2b17c; --line: rgba(236,228,212,0.14); --sick: #e39aac; color-scheme: dark; }
+:root { --bg: #0a1120; --glow: #14203a; --deep: #070c17; --ink: #ece4d4; --muted: #8f99ab; --gold: #d2b17c; --on-gold: #070c17; --field: rgba(236,228,212,0.05); --line: rgba(236,228,212,0.14); --sick: #e39aac; color-scheme: dark; }
+:root[data-theme="light"] { --bg: #eef2f7; --glow: #ffffff; --deep: #e3e9f1; --ink: #142033; --muted: #5b6678; --gold: #946b22; --on-gold: #ffffff; --field: rgba(255,255,255,0.8); --line: rgba(20,32,51,0.14); --sick: #b33a5a; color-scheme: light; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-body { background: radial-gradient(120% 80% at 50% -10%, #14203a 0%, var(--bg) 55%, #070c17 100%); background-color: var(--bg); color: var(--ink); font-family: "Manrope", "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; padding-inline: 16px; }
+body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 55%, var(--deep) 100%); background-color: var(--bg); color: var(--ink); font-family: "Manrope", "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; padding-inline: 16px; }
 form { width: 100%; max-width: 340px; display: grid; gap: 14px; text-align: center; }
 h1 { font-family: "Fraunces", Georgia, serif; font-weight: 400; font-size: 40px; margin: 0; }
 h1 em { color: var(--gold); }
 p { margin: 0; color: var(--muted); font-size: 14px; }
-input { width: 100%; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line); background: rgba(236,228,212,0.05); color: var(--ink); font: inherit; font-size: 16px; text-align: center; }
+input { width: 100%; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--field); color: var(--ink); font: inherit; font-size: 16px; text-align: center; }
 input:focus { outline: none; border-color: var(--gold); }
-button { padding: 12px 16px; border-radius: 999px; border: 0; background: var(--gold); color: #070c17; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+button { padding: 12px 16px; border-radius: 999px; border: 0; background: var(--gold); color: var(--on-gold); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
 button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 #err { color: var(--sick); min-height: 1.4em; }
+form { transition: opacity .5s ease, transform .5s ease; }
+form.away { opacity: 0; transform: translateY(-16px); }
+#takeoff { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+#takeoff canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#takeoff .dim { position: absolute; inset: 0; background: radial-gradient(80% 60% at 50% 40%, var(--glow) 0%, var(--bg) 70%, var(--deep) 100%); opacity: 0; transition: opacity .35s ease; }
+#takeoff .dim.on { opacity: 1; }
+#takeoff .hello { position: absolute; left: 0; right: 0; top: 30%; text-align: center; font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: clamp(40px, 10vw, 76px); line-height: 1.05; color: var(--ink); opacity: 0; transform: translateY(14px) scale(.97); transition: opacity .5s ease, transform .7s cubic-bezier(.2,.8,.2,1); padding-inline: 16px; text-shadow: 0 2px 30px var(--bg); }
+#takeoff .hello em { font-style: italic; font-weight: 400; color: var(--gold); }
+#takeoff .hello small { display: block; font-family: "Manrope", system-ui, sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-top: 16px; }
+#takeoff .hello.on { opacity: 1; transform: none; }
+#takeoff .veil { position: absolute; inset: 0; background: var(--bg); opacity: 0; transition: opacity .45s ease; }
+#takeoff .veil.on { opacity: 1; }
 </style>
 </head>
 <body>
@@ -44,17 +58,126 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   }
   function show(html) { document.open(); document.write(html); document.close(); }
   var f = document.getElementById('f'), pw = document.getElementById('pw'), go = document.getElementById('go'), err = document.getElementById('err');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Sound: Kabinen-Gong + Triebwerk beim Start (im Browser erzeugt) ----------
+  function makeAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      var ac = new AC();
+      if (ac.resume) ac.resume();
+      return ac;
+    } catch (e) { return null; }
+  }
+  function playTakeoff(ac) {
+    if (!ac) return;
+    try {
+      var t0 = ac.currentTime + 0.05;
+      var master = ac.createGain(); master.gain.value = 0.55; master.connect(ac.destination);
+      // Ding-Dong
+      [[880, 0], [659.25, 0.34]].forEach(function (n) {
+        var o = ac.createOscillator(), g = ac.createGain(), t = t0 + n[1];
+        o.type = 'sine'; o.frequency.value = n[0];
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.4);
+      });
+      // Triebwerk: gefiltertes Rauschen, schwillt an und zieht von links nach rechts
+      var j0 = t0 + 0.9, dur = 2.7, len = Math.floor(ac.sampleRate * dur);
+      var buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0), brown = 0;
+      for (var i = 0; i < len; i++) { var w = Math.random() * 2 - 1; brown = (brown + 0.02 * w) / 1.02; d[i] = brown * 3 + w * 0.25; }
+      var src = ac.createBufferSource(); src.buffer = buf;
+      var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7;
+      bp.frequency.setValueAtTime(220, j0);
+      bp.frequency.exponentialRampToValueAtTime(1500, j0 + 1.4);
+      bp.frequency.exponentialRampToValueAtTime(450, j0 + dur);
+      var g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, j0);
+      g.gain.exponentialRampToValueAtTime(0.9, j0 + 1.25);
+      g.gain.exponentialRampToValueAtTime(0.0001, j0 + dur);
+      src.connect(bp); bp.connect(g);
+      var out = g;
+      if (ac.createStereoPanner) {
+        var pan = ac.createStereoPanner();
+        pan.pan.setValueAtTime(-0.8, j0); pan.pan.linearRampToValueAtTime(0.9, j0 + dur);
+        g.connect(pan); out = pan;
+      }
+      out.connect(master); src.start(j0); src.stop(j0 + dur);
+      // tiefes Grollen
+      var o = ac.createOscillator(), lp = ac.createBiquadFilter(), rg = ac.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(42, j0); o.frequency.exponentialRampToValueAtTime(85, j0 + 1.6);
+      lp.type = 'lowpass'; lp.frequency.value = 170;
+      rg.gain.setValueAtTime(0.0001, j0); rg.gain.exponentialRampToValueAtTime(0.18, j0 + 1.1); rg.gain.exponentialRampToValueAtTime(0.0001, j0 + dur);
+      o.connect(lp); lp.connect(rg); rg.connect(master); o.start(j0); o.stop(j0 + dur);
+    } catch (e) {}
+  }
+
+  // ---------- Animation: "Willkommen an Bord", dann Start mit Kondensstreifen ----------
+  var PLANE = new Path2D('M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z');
+  function takeoff() {
+    return new Promise(function (done) {
+      if (reduce) { done(); return; }
+      var css = getComputedStyle(document.documentElement);
+      var gold = css.getPropertyValue('--gold').trim() || '#d2b17c';
+      var wrap = document.createElement('div'); wrap.id = 'takeoff';
+      wrap.innerHTML = '<div class="dim"></div><canvas></canvas><div class="hello">Willkommen<br><em>an Bord</em><small>Joels Dienstplan</small></div><div class="veil"></div>';
+      document.body.appendChild(wrap);
+      f.classList.add('away');
+      var cv = wrap.querySelector('canvas'), ctx = cv.getContext('2d'), hello = wrap.querySelector('.hello'), veil = wrap.querySelector('.veil');
+      var dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      requestAnimationFrame(function () { wrap.querySelector('.dim').classList.add('on'); });
+      setTimeout(function () { hello.classList.add('on'); }, 200);
+      // Rollweg am Boden (unter dem Text), dann Steigflug nach rechts oben
+      var P0 = [-0.12 * W, 0.86 * H], P1 = [0.6 * W, 0.86 * H], P2 = [1.2 * W, 0.05 * H];
+      function pt(t) { var a = 1 - t; return [a * a * P0[0] + 2 * a * t * P1[0] + t * t * P2[0], a * a * P0[1] + 2 * a * t * P1[1] + t * t * P2[1]]; }
+      var start = null, DELAY = 900, FLY = 2400;
+      function frame(now) {
+        if (!start) start = now;
+        var el = now - start - DELAY;
+        ctx.clearRect(0, 0, W, H);
+        if (el > 0) {
+          var x = Math.min(1, el / FLY), t = x * x * (1.6 - 0.6 * x); // beschleunigen wie beim Startlauf
+          // Kondensstreifen
+          var n = 40;
+          for (var i = 1; i <= n; i++) {
+            var ta = t * (i - 1) / n, tb = t * i / n, a = pt(ta), b = pt(tb);
+            ctx.strokeStyle = gold; ctx.globalAlpha = 0.5 * (i / n) * (1 - Math.max(0, x - 0.75) * 2);
+            ctx.lineWidth = 1 + 2 * (i / n); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          var p = pt(t), q = pt(Math.min(1, t + 0.01)), ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
+          var size = 30 + 40 * t;
+          ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(ang + Math.PI / 2); ctx.scale(size / 24, size / 24); ctx.translate(-12, -12);
+          ctx.shadowColor = gold; ctx.shadowBlur = 12; ctx.fillStyle = gold; ctx.fill(PLANE); ctx.restore();
+          if (x > 0.8 && !veil.classList.contains('on')) veil.classList.add('on');
+          if (x >= 1) { setTimeout(done, 250); return; }
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
   f.addEventListener('submit', async function (ev) {
     ev.preventDefault();
+    var ac = reduce ? null : makeAudio(); // im Klick erzeugen, damit der Browser Ton erlaubt
     go.disabled = true; go.textContent = 'Wird geöffnet …'; err.textContent = '';
+    var html;
     try {
-      var html = await open(pw.value);
-      try { localStorage.setItem(KEY, pw.value); } catch (e) {}
-      show(html);
+      html = await open(pw.value);
     } catch (e) {
+      if (ac && ac.close) ac.close();
       err.textContent = 'Das Passwort stimmt nicht. Bitte nochmals versuchen.';
       go.disabled = false; go.textContent = 'Öffnen'; pw.select();
+      return;
     }
+    try { localStorage.setItem(KEY, pw.value); } catch (e) {}
+    playTakeoff(ac);
+    await takeoff();
+    show(html);
   });
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}
