@@ -8,13 +8,13 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write          # zum Speichern der verschluesselten Flug-Historie
   pages: write
   id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -32,9 +32,30 @@ jobs:
           PAGE_PASSWORD: ${{ secrets.PAGE_PASSWORD }}
         run: ./build-github.ps1
 
+      - name: App-Icon erzeugen
+        continue-on-error: true
+        run: |
+          for s in 180 512; do
+            google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
+              --force-device-scale-factor=1 --window-size=$s,$s --virtual-time-budget=2000 \
+              --screenshot="$PWD/public/icon-$s.png" "file://$PWD/icon.html#$s"
+          done
+          ls -l public
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Flug-Historie speichern
+        continue-on-error: true
+        run: |
+          git add history.enc
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Flug-Historie aktualisiert"
+            git push
+          fi
