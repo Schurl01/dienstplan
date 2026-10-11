@@ -9,6 +9,8 @@ if (-not $icsUrl) { throw 'Das Secret ICS_URL fehlt (Settings > Secrets and vari
 $bytes = (Invoke-WebRequest -Uri $icsUrl -UseBasicParsing).RawContentStream.ToArray()
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 if ($text -notmatch 'BEGIN:VCALENDAR') { throw 'Download ist kein ICS-Kalender.' }
+# Leerer Kalender (z. B. abgelaufener Link): abbrechen, damit die bisherige Seite online bleibt.
+if ($text -notmatch 'BEGIN:VEVENT') { throw 'Der Kalender ist leer. Ist der Link in ICS_URL abgelaufen? Bitte den neuen Link aus dem SWISS-Portal eintragen.' }
 $b64 = [Convert]::ToBase64String($bytes)
 
 $land = (Invoke-WebRequest -Uri 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json' -UseBasicParsing).RawContentStream.ToArray()
@@ -28,9 +30,8 @@ $html = $head + $body + '</body></html>'
 $pw = $env:PAGE_PASSWORD
 if (-not $pw) { throw 'Das Secret PAGE_PASSWORD fehlt (Settings > Secrets and variables > Actions).' }
 $iter = 600000
-$salt = [byte[]]::new(16); $iv = [byte[]]::new(12)
-[Security.Cryptography.RandomNumberGenerator]::Fill($salt)
-[Security.Cryptography.RandomNumberGenerator]::Fill($iv)
+$salt = [Security.Cryptography.RandomNumberGenerator]::GetBytes(16)
+$iv = [Security.Cryptography.RandomNumberGenerator]::GetBytes(12)
 $key = [Security.Cryptography.Rfc2898DeriveBytes]::Pbkdf2([Text.Encoding]::UTF8.GetBytes($pw), $salt, $iter, [Security.Cryptography.HashAlgorithmName]::SHA256, 32)
 $plain = [Text.Encoding]::UTF8.GetBytes($html)
 $cipher = [byte[]]::new($plain.Length); $tag = [byte[]]::new(16)

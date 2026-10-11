@@ -822,7 +822,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 
     function saved() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
     function syncToken() { var t = saved(); tokBox.hidden = !!t; forget.hidden = !t; }
-    function say(text, kind) { msg.textContent = text; msg.className = 'msg' + (kind ? ' ' + kind : ''); }
+    function say(text, kind) { msg.textContent = text; msg.className = 'msg' + (kind ? ' ' + kind : ''); msg.scrollIntoView({ block: 'nearest' }); }
     syncToken();
     box.addEventListener('toggle', function () { if (box.open) { syncToken(); urlIn.focus(); } });
     if (location.hash === '#admin') { box.open = true; openSettings(); }
