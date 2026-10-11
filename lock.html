@@ -27,7 +27,9 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 55%, var(--deep) 100%); background-color: var(--bg); color: var(--ink); font-family: "Manrope", "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; padding-inline: 16px; }
-form { width: 100%; max-width: 340px; display: grid; gap: 14px; text-align: center; }
+form, #board { width: 100%; max-width: 340px; display: grid; gap: 14px; text-align: center; }
+#board[hidden] { display: none; }
+#board button { font-size: 17px; padding: 14px 16px; }
 h1 { font-family: "Fraunces", Georgia, serif; font-weight: 400; font-size: 40px; margin: 0; }
 h1 em { color: var(--gold); }
 p { margin: 0; color: var(--muted); font-size: 14px; }
@@ -37,8 +39,8 @@ button { padding: 12px 16px; border-radius: 999px; border: 0; background: var(--
 button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 #err { color: var(--sick); min-height: 1.4em; }
-form { transition: opacity .5s ease, transform .5s ease; }
-form.away { opacity: 0; transform: translateY(-16px); }
+form, #board { transition: opacity .5s ease, transform .5s ease; }
+form.away, #board.away { opacity: 0; transform: translateY(-16px); }
 #takeoff { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
 #takeoff canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 #takeoff .dim { position: absolute; inset: 0; background: radial-gradient(80% 60% at 50% 40%, var(--glow) 0%, var(--bg) 70%, var(--deep) 100%); opacity: 0; transition: opacity .35s ease; }
@@ -59,6 +61,11 @@ form.away { opacity: 0; transform: translateY(-16px); }
   <button id="go" type="submit">Öffnen</button>
   <p id="err" role="alert"></p>
 </form>
+<div id="board" hidden>
+  <h1><em>Joels</em> Dienstplan</h1>
+  <p>Willkommen zurück!</p>
+  <button id="board-go" type="button">✈ Einsteigen</button>
+</div>
 <script>
 (function () {
   var SALT = '__SALT__', IV = '__IV__', ITER = __ITER__, DATA = '__DATA__';
@@ -72,15 +79,22 @@ form.away { opacity: 0; transform: translateY(-16px); }
   }
   function show(html) { document.open(); document.write(html); document.close(); }
   var f = document.getElementById('f'), pw = document.getElementById('pw'), go = document.getElementById('go'), err = document.getElementById('err');
+  var board = document.getElementById('board'), boardGo = document.getElementById('board-go');
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ---------- Sound: Kabinen-Gong + Triebwerk beim Start (im Browser erzeugt) ----------
+  // Muss direkt im Klick aufgerufen werden (iPhone erlaubt Ton nur nach einer Berührung)
   function makeAudio() {
     try {
+      // iPhone: Ton wie Medien behandeln, damit er auch bei Lautlos-Schalter spielt (iOS 16.4+)
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       var ac = new AC();
       if (ac.resume) ac.resume();
+      // stillen Mini-Ton abspielen: "entsperrt" die Audioausgabe auf iOS
+      var b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource();
+      s.buffer = b; s.connect(ac.destination); if (s.start) s.start(0); else if (s.noteOn) s.noteOn(0);
       return ac;
     } catch (e) { return null; }
   }
@@ -140,7 +154,7 @@ form.away { opacity: 0; transform: translateY(-16px); }
       var sub = { autumn: '🎃 Happy Halloween · Joels Dienstplan', radar: 'Radarkontakt hergestellt', retro: 'Boarding · Joels Dienstplan', sunset: 'Guten Abend · Joels Dienstplan' }[theme] || 'Joels Dienstplan';
       wrap.innerHTML = '<div class="dim"></div><canvas></canvas><div class="hello">Willkommen<br><em>an Bord</em><small>' + sub + '</small></div><div class="veil"></div>';
       document.body.appendChild(wrap);
-      f.classList.add('away');
+      f.classList.add('away'); board.classList.add('away');
       var cv = wrap.querySelector('canvas'), ctx = cv.getContext('2d'), hello = wrap.querySelector('.hello'), veil = wrap.querySelector('.veil');
       var dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
       cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -209,16 +223,25 @@ form.away { opacity: 0; transform: translateY(-16px); }
   });
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}
-  if (saved) {
-    // Bereits angemeldet: Animation trotzdem zeigen, Entschlüsseln läuft parallel.
-    // Ton nur, wenn der Browser ihn ohne Klick erlaubt.
-    var ac = reduce ? null : makeAudio();
-    if (ac && ac.state === 'running') playTakeoff(ac); else if (ac && ac.close) ac.close();
-    Promise.all([open(saved), takeoff()]).then(function (r) { show(r[0]); }, function () {
-      var t = document.getElementById('takeoff'); if (t) t.remove();
-      try { localStorage.removeItem(KEY); } catch (e) {}
-      f.classList.remove('away'); f.hidden = false; pw.focus();
-    });
+  function backToForm() {
+    var t = document.getElementById('takeoff'); if (t) t.remove();
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    board.hidden = true; f.classList.remove('away'); f.hidden = false; pw.focus();
+  }
+  if (saved && reduce) {
+    // Weniger Bewegung gewünscht: direkt öffnen
+    open(saved).then(show, backToForm);
+  } else if (saved) {
+    // Bereits angemeldet: "Einsteigen"-Knopf, damit Animation und Ton (auch auf dem iPhone) starten dürfen.
+    // Entschlüsseln läuft schon im Hintergrund.
+    var ready = open(saved);
+    ready.catch(function () {});
+    board.hidden = false; boardGo.focus();
+    boardGo.addEventListener('click', function () {
+      boardGo.disabled = true;
+      playTakeoff(makeAudio());
+      Promise.all([ready, takeoff()]).then(function (r) { show(r[0]); }, backToForm);
+    }, { once: true });
   } else { f.hidden = false; pw.focus(); }
 })();
 </script>
