@@ -104,6 +104,20 @@
   color-scheme: dark;
 }
 :root[data-theme="radar"] h1, :root[data-theme="radar"] .status-title { text-shadow: 0 0 18px rgba(61, 255, 154, 0.35); }
+/* Schalter */
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch i { position: relative; flex: none; width: 46px; height: 28px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); transition: background .2s; }
+.switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--muted); transition: transform .2s, background .2s; }
+.switch input:checked + i { background: var(--gold); border-color: var(--gold); }
+.switch input:checked + i::after { transform: translateX(18px); background: var(--on-gold); }
+.switch input:focus-visible + i { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* Jumpscare */
+#scare { position: fixed; inset: 0; z-index: 9999; background: #000; cursor: pointer; }
+#scare canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#scare .got { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px; color: #f2e9e4; font-family: var(--font-display); font-size: clamp(36px, 9vw, 64px); opacity: 0; transition: opacity .5s ease; padding-inline: 16px; }
+#scare .got small { font-family: var(--font-body); font-size: 14px; color: #a99; }
+#scare .got.on { opacity: 1; }
 /* Tagesfenster */
 .daydlg { width: min(520px, calc(100% - 24px)); }
 .daydlg h2 { font-size: 26px; text-transform: none; }
@@ -145,15 +159,6 @@ body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--b
 h1, h2 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.02; letter-spacing: -0.02em; }
 h1 em { font-style: italic; color: var(--gold); }
-/* Easter Egg: Kapitäns-Durchsage (lange auf "Joels" drücken) */
-#captain { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; transition: text-shadow 1s ease; }
-#captain.hold { text-shadow: 0 0 22px var(--gold), 0 0 4px var(--gold); }
-.pa { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 50; width: min(520px, calc(100% - 32px)); transform: translate(-50%, 20px); opacity: 0;
-  display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--gold); background: var(--bg); color: var(--ink);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45); transition: opacity .4s ease, transform .4s ease; pointer-events: none; font-size: 14px; line-height: 1.5; }
-.pa.on { opacity: 1; transform: translate(-50%, 0); }
-.pa .mic { font-size: 20px; line-height: 1.3; }
-.pa b { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
 h2 { font-size: 24px; letter-spacing: -0.01em; }
 .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
@@ -360,7 +365,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
-    <h1><em id="captain">Joels</em> Dienstplan</h1>
+    <h1><em>Joels</em> Dienstplan</h1>
     <p>Alle Flüge und Dienste mit Live-Verfolgung. Abflug- und Ankunftszeiten gelten jeweils in Ortszeit des Flughafens.</p>
     <div class="changes panel" id="changes" role="status" hidden></div>
   </header>
@@ -455,6 +460,22 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   </div>
 
   <p class="hint">Darstellung und Reihenfolge werden nur auf diesem Gerät gespeichert.</p>
+
+  <div class="set-group">
+    <span class="eyebrow">Anmeldung</span>
+    <p class="hint">Dieses Gerät merkt sich das Passwort. Beim Abmelden wird beim nächsten Öffnen wieder danach gefragt.</p>
+    <button type="button" class="btn" id="logout">Auf diesem Gerät abmelden</button>
+  </div>
+
+  <div class="set-group">
+    <span class="eyebrow">Spezial</span>
+    <label class="switch" for="js-toggle">
+      <span>👻 Jumpscare-Modus</span>
+      <input type="checkbox" id="js-toggle" checked>
+      <i aria-hidden="true"></i>
+    </label>
+    <p class="hint">Gruselige Überraschungen im Halloween-Design. Zum Deaktivieren ausschalten.</p>
+  </div>
 
   <details class="set-group adminbox" id="adminbox" hidden>
     <summary>Nur für Joel: Plan aktualisieren</summary>
@@ -1216,109 +1237,163 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     } finally { btn.disabled = false; }
   });
 
-  // ---------- Easter Egg: Kapitäns-Durchsage (lange auf "Joels" drücken) ----------
-  (function () {
-    var el = document.getElementById('captain'), downAt = 0, busy = false, safety = null;
-    function cancel() { el.classList.remove('hold'); downAt = 0; }
-    el.addEventListener('pointerdown', function () { if (!busy) { downAt = Date.now(); el.classList.add('hold'); } });
-    el.addEventListener('pointerleave', cancel);
-    el.addEventListener('pointercancel', cancel);
-    el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-    // Auslösen beim Loslassen: zählt als Berührung, damit Ton und Stimme auch auf dem iPhone erlaubt sind
-    el.addEventListener('pointerup', function () {
-      var held = downAt && Date.now() - downAt >= 800;
-      cancel();
-      if (held && !busy) announce();
-    });
+  document.getElementById('logout').addEventListener('click', function () {
+    try { localStorage.removeItem('dienstplan-pw'); } catch (e) {}
+    location.reload();
+  });
 
-    function sayFno(f) { return f.airline.split('').join(' ') + ' ' + f.num; }
-    function sayTime(hm) { var p = hm.split(':'); return +p[0] + ' Uhr' + (+p[1] ? ' ' + +p[1] : ''); }
-    function sayDur(ms) {
-      var m = Math.round(ms / 60000), h = Math.floor(m / 60); m %= 60;
-      return (h ? h + (h === 1 ? ' Stunde' : ' Stunden') : '') + (h && m ? ' und ' : '') + (m ? m + (m === 1 ? ' Minute' : ' Minuten') : '');
+  // ---------- Streich: "Jumpscare-Modus" ausschalten = Jumpscare ----------
+  (function () {
+    var toggle = document.getElementById('js-toggle'), busy = false, screamAudio = null;
+
+    // Schrei: verzerrte, schwankende Töne + Rauschen + tiefer Schlag
+    function scream(ac) {
+      var t0 = ac.currentTime + 0.02, dur = 1.7, i;
+      var comp = ac.createDynamicsCompressor(); comp.threshold.value = -12; comp.ratio.value = 8; comp.connect(ac.destination);
+      var master = ac.createGain();
+      master.gain.setValueAtTime(0.0001, t0); master.gain.exponentialRampToValueAtTime(1, t0 + 0.03);
+      master.gain.setValueAtTime(1, t0 + 1.1); master.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      master.connect(comp);
+      var shaper = ac.createWaveShaper(), curve = new Float32Array(1024);
+      for (i = 0; i < 1024; i++) curve[i] = Math.tanh((i / 512 - 1) * 4);
+      shaper.curve = curve; shaper.connect(master);
+      [0.97, 1, 1.04, 1.5].forEach(function (m, k) {
+        var o = ac.createOscillator(); o.type = k === 3 ? 'square' : 'sawtooth';
+        o.frequency.setValueAtTime(700 * m, t0);
+        o.frequency.exponentialRampToValueAtTime(1500 * m, t0 + 0.25);
+        o.frequency.exponentialRampToValueAtTime(1150 * m, t0 + 1.0);
+        o.frequency.exponentialRampToValueAtTime(600 * m, t0 + dur);
+        var lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 9 + k; lg.gain.value = 60 * m;
+        lfo.connect(lg); lg.connect(o.frequency);
+        var g = ac.createGain(); g.gain.value = k === 3 ? 0.12 : 0.22;
+        o.connect(g); g.connect(shaper);
+        o.start(t0); o.stop(t0 + dur); lfo.start(t0); lfo.stop(t0 + dur);
+      });
+      var len = Math.floor(ac.sampleRate * dur), nb = ac.createBuffer(1, len, ac.sampleRate), nd = nb.getChannelData(0);
+      for (i = 0; i < len; i++) nd[i] = Math.random() * 2 - 1;
+      var ns = ac.createBufferSource(), bp = ac.createBiquadFilter(), ng = ac.createGain();
+      ns.buffer = nb; bp.type = 'bandpass'; bp.frequency.value = 2500; bp.Q.value = 0.8; ng.gain.value = 0.5;
+      ns.connect(bp); bp.connect(ng); ng.connect(shaper); ns.start(t0); ns.stop(t0 + dur);
+      var boom = ac.createOscillator(), bg = ac.createGain();
+      boom.frequency.setValueAtTime(70, t0); boom.frequency.exponentialRampToValueAtTime(28, t0 + 0.5);
+      bg.gain.setValueAtTime(0.0001, t0); bg.gain.exponentialRampToValueAtTime(1, t0 + 0.01); bg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
+      boom.connect(bg); bg.connect(comp); boom.start(t0); boom.stop(t0 + 0.7);
     }
-    function sayDay(d) {
-      var r = relDay(dayKey(d), dayKey(new Date()));
-      if (r === 'heute' || r === 'morgen') return r;
-      if (r === 'in 2 Tagen') return 'übermorgen';
-      return 'am ' + new Intl.DateTimeFormat('de-CH', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(d).replace(/\./g, '');
-    }
-    function sayWeather(code) {
-      var w = weatherCache[code];
-      if (!w || !w.at || w.failed) return '';
-      return ' Am Zielort erwarten uns ' + w.temp + ' Grad, ' + wmo(w.code, w.day).t.toLowerCase() + '.';
-    }
-    function script(spooky) {
-      var now = new Date();
-      var live = flights.filter(function (f) { return f.start <= now && now < f.end; })[0];
-      var nextF = flights.filter(function (f) { return f.start > now; })[0];
-      var s = spooky
-        ? 'Meine Damen und Herren ... hier spricht Ihr Kapitän. Willkommen an Bord ... des Geisterflugs. Wir fliegen heute mitten durch die Geisterstunde.'
-        : 'Meine Damen und Herren, hier spricht Ihr Kapitän. Herzlich willkommen an Bord von Joels Dienstplan.';
-      if (live) {
-        s += ' Wir befinden uns auf dem Flug ' + sayFno(live) + ' von ' + city(live.from) + ' nach ' + city(live.to) + '. Die Landung ist in etwa ' + sayDur(live.end - now) + ' geplant.' + sayWeather(live.to);
-      } else if (nextF) {
-        s += ' Unser nächster Flug, ' + sayFno(nextF) + ' von ' + city(nextF.from) + ' nach ' + city(nextF.to) + ', startet ' + sayDay(nextF.start) + ' um ' + sayTime(nextF.dep) + ' Ortszeit' +
-          (spooky ? ' ... falls bis dahin noch alle an Bord sind.' : '.') + ' Die Flugzeit beträgt ' + sayDur(nextF.end - nextF.start) + '.' + sayWeather(nextF.to === HOME ? nextF.from : nextF.to);
-      } else {
-        s += ' Für die nächsten Tage sind keine Flüge geplant. Joel geniesst den Boden unter den Füssen.';
-      }
-      s += spooky
-        ? ' Bitte bleiben Sie angeschnallt ... egal, was Sie draussen vor dem Fenster sehen. Und falls Sie ein Kratzen an der Kabinentür hören ... das ist ganz sicher nur die Crew. Hehehe. Happy Halloween.'
-        : ' Bitte schnallen Sie sich an, lehnen Sie sich zurück und geniessen Sie den Flug. Vielen Dank.';
-      return s;
-    }
-    function pickVoice(vs) {
-      var de = vs.filter(function (v) { return /^de/i.test(v.lang); });
-      return de.filter(function (v) { return /CH/i.test(v.lang); })[0] || de.filter(function (v) { return /DE/i.test(v.lang); })[0] || de[0] || null;
-    }
-    function chime(ac) {
-      if (!ac) return;
+    // vorab als Audiodatei erzeugen, damit er beim Antippen sofort (auch auf dem iPhone) losgeht
+    (function () {
       try {
-        var t0 = ac.currentTime + 0.05, master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination);
-        [[880, 0], [659.25, 0.34]].forEach(function (n) {
-          var o = ac.createOscillator(), g = ac.createGain(), t = t0 + n[1];
-          o.type = 'sine'; o.frequency.value = n[0];
-          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
-          o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.4);
-        });
+        var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return;
+        var sr = 22050, off = new OAC(1, Math.floor(sr * 1.8), sr); scream(off);
+        var ready = function (buf) {
+          var n = buf.length, d = buf.getChannelData(0), dv = new DataView(new ArrayBuffer(44 + n * 2)), o = 0;
+          function s(t) { for (var k = 0; k < t.length; k++) dv.setUint8(o++, t.charCodeAt(k)); }
+          function u32(v) { dv.setUint32(o, v, true); o += 4; } function u16(v) { dv.setUint16(o, v, true); o += 2; }
+          s('RIFF'); u32(36 + n * 2); s('WAVE'); s('fmt '); u32(16); u16(1); u16(1); u32(sr); u32(sr * 2); u16(2); u16(16); s('data'); u32(n * 2);
+          for (var i = 0; i < n; i++) { var x = Math.max(-1, Math.min(1, d[i])); dv.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); o += 2; }
+          screamAudio = new Audio(URL.createObjectURL(new Blob([dv], { type: 'audio/wav' }))); screamAudio.preload = 'auto';
+        };
+        var p = off.startRendering();
+        if (p && p.then) p.then(ready, function () {}); else off.oncomplete = function (e) { ready(e.renderedBuffer); };
       } catch (e) {}
+    })();
+
+    // Gesicht: bleich, leere Augenhöhlen, glühende Pupillen, aufgerissener Mund
+    var cracks = [];
+    for (var c = 0; c < 9; c++) {
+      var a = Math.random() * 6.283, pts = [[Math.cos(a), Math.sin(a)]];
+      for (var j = 1; j < 6; j++) { var lp = pts[j - 1]; pts.push([lp[0] * 0.86 + (Math.random() - 0.5) * 0.12, lp[1] * 0.86 + (Math.random() - 0.5) * 0.12]); }
+      cracks.push(pts);
     }
-    var pa = null;
-    function showPA(text) {
-      if (!pa) { pa = document.createElement('div'); pa.className = 'pa'; pa.setAttribute('role', 'status'); document.body.appendChild(pa); }
-      pa.innerHTML = '<span class="mic" aria-hidden="true">🎙️</span><div><b>Durchsage aus dem Cockpit</b></div>';
-      pa.querySelector('div').appendChild(document.createTextNode(text.replace(/ \.\.\. /g, ' … ')));
-      requestAnimationFrame(function () { pa.classList.add('on'); });
-    }
-    function announce() {
-      busy = true;
-      var spooky = curTheme === 'autumn', text = script(spooky), ac = null, synth = window.speechSynthesis;
-      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-      try { var AC = window.AudioContext || window.webkitAudioContext; if (AC) { ac = new AC(); if (ac.resume) ac.resume(); } } catch (e) {}
-      chime(ac);
-      // Stimme im Fingertipp "entsperren" (iPhone), echte Durchsage nach dem Gong
-      if (synth) { try { synth.cancel(); var u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; synth.speak(u0); } catch (e) {} }
-      showPA(text);
-      function done() {
-        clearTimeout(safety);
-        if (pa) pa.classList.remove('on');
-        busy = false;
-        if (ac && ac.close) setTimeout(function () { ac.close(); }, 500);
+    function face(ctx, W, H, scale, jit) {
+      var R = Math.min(W, H) * 0.45 * scale, cx = W / 2 + (Math.random() - 0.5) * jit * R, cy = H * 0.5 + (Math.random() - 0.5) * jit * R;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+      var glow = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.6);
+      glow.addColorStop(0, 'rgba(120,0,0,0.55)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate((Math.random() - 0.5) * jit * 0.6);
+      // Kopf
+      var skin = ctx.createRadialGradient(0, -R * 0.2, R * 0.1, 0, 0, R * 0.95);
+      skin.addColorStop(0, '#e4e6da'); skin.addColorStop(0.6, '#9da196'); skin.addColorStop(1, '#2a2d28');
+      ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(0, 0, R * 0.62, R * 0.88, 0, 0, 6.283); ctx.fill();
+      // Risse
+      ctx.strokeStyle = 'rgba(40,10,10,0.55)'; ctx.lineWidth = Math.max(1, R * 0.008);
+      cracks.forEach(function (p) {
+        ctx.beginPath(); ctx.moveTo(p[0][0] * R * 0.6, p[0][1] * R * 0.85);
+        for (var k = 1; k < p.length; k++) ctx.lineTo(p[k][0] * R * 0.6, p[k][1] * R * 0.85);
+        ctx.stroke();
+      });
+      // Augenhöhlen
+      [-1, 1].forEach(function (s) {
+        var ex = s * R * 0.24, ey = -R * 0.16;
+        var eg = ctx.createRadialGradient(ex, ey, R * 0.02, ex, ey, R * 0.24);
+        eg.addColorStop(0, '#000'); eg.addColorStop(0.6, 'rgba(0,0,0,0.95)'); eg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = eg; ctx.beginPath(); ctx.ellipse(ex, ey, R * 0.2, R * 0.26, s * 0.25, 0, 6.283); ctx.fill();
+        ctx.shadowColor = '#ff1a0a'; ctx.shadowBlur = R * 0.08; ctx.fillStyle = '#ff2a12';
+        ctx.beginPath(); ctx.arc(ex + s * R * 0.02, ey + R * 0.03, R * 0.028, 0, 6.283); ctx.fill(); ctx.shadowBlur = 0;
+        // schwarze Tränen
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = R * 0.018; ctx.beginPath(); ctx.moveTo(ex, ey + R * 0.2);
+        ctx.quadraticCurveTo(ex + s * R * 0.03, ey + R * 0.38, ex - s * R * 0.01, ey + R * 0.55); ctx.stroke();
+      });
+      // Nase
+      ctx.fillStyle = '#0c0c0c';
+      ctx.beginPath(); ctx.ellipse(-R * 0.04, R * 0.12, R * 0.025, R * 0.06, 0.3, 0, 6.283); ctx.ellipse(R * 0.04, R * 0.12, R * 0.025, R * 0.06, -0.3, 0, 6.283); ctx.fill();
+      // Mund
+      var my = R * 0.48, mw = R * 0.2, mh = R * 0.3;
+      var mg = ctx.createRadialGradient(0, my, R * 0.02, 0, my, mh);
+      mg.addColorStop(0, '#000'); mg.addColorStop(0.8, '#150000'); mg.addColorStop(1, '#3a0000');
+      ctx.fillStyle = mg; ctx.beginPath(); ctx.ellipse(0, my, mw, mh, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#cfc7a8';
+      for (var t = 0; t < 7; t++) {
+        var tx = -mw * 0.8 + t * mw * 0.27, ty = my - mh * 0.92 + Math.abs(t - 3) * mh * 0.05;
+        ctx.beginPath(); ctx.moveTo(tx - mw * 0.1, ty); ctx.lineTo(tx + mw * 0.1, ty); ctx.lineTo(tx, ty + mh * 0.22); ctx.fill();
+        var by = my + mh * 0.92 - Math.abs(t - 3) * mh * 0.05;
+        ctx.beginPath(); ctx.moveTo(tx - mw * 0.1, by); ctx.lineTo(tx + mw * 0.1, by); ctx.lineTo(tx, by - mh * 0.2); ctx.fill();
       }
-      setTimeout(function () {
-        if (!synth || !window.SpeechSynthesisUtterance) { safety = setTimeout(done, 12000); return; }
-        var u = new SpeechSynthesisUtterance(text.replace(/ \.\.\. /g, ', '));
-        u.lang = 'de-DE';
-        var v = pickVoice(synth.getVoices()); if (v) { u.voice = v; u.lang = v.lang; }
-        u.rate = spooky ? 0.82 : 0.98; u.pitch = spooky ? 0.5 : 0.95;
-        u.onend = u.onerror = function () { setTimeout(done, 800); };
-        synth.speak(u);
-        safety = setTimeout(done, 70000);
-      }, 1300);
+      ctx.restore();
+      // Körnung + Vignette
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      for (var g = 0; g < 900; g++) ctx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+      var v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
+      v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.9)');
+      ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
     }
-    // Stimmen laden (manche Browser liefern sie erst verzögert)
-    if (window.speechSynthesis) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = function () {}; } catch (e) {} }
+
+    function jumpscare() {
+      busy = true;
+      // Ton sofort im Fingertipp starten
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      var ac = null;
+      if (screamAudio) { try { screamAudio.currentTime = 0; screamAudio.volume = 1; var p = screamAudio.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+      else { try { var AC = window.AudioContext || window.webkitAudioContext; if (AC) { ac = new AC(); if (ac.resume) ac.resume(); scream(ac); } } catch (e) {} }
+      try { if (navigator.vibrate) navigator.vibrate([300, 80, 500]); } catch (e) {}
+      var dlg = document.getElementById('settings'); if (dlg.open && dlg.close) dlg.close();
+      var wrap = document.createElement('div'); wrap.id = 'scare';
+      wrap.innerHTML = '<canvas></canvas><div class="got">😈 Erwischt!<small>Der Jumpscare-Modus bleibt natürlich an.</small></div>';
+      document.body.appendChild(wrap);
+      var cv = wrap.querySelector('canvas'), ctx = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var start = performance.now(), finished = false;
+      function end() {
+        if (finished) return; finished = true;
+        wrap.remove(); toggle.checked = true; busy = false;
+        if (ac && ac.close) setTimeout(function () { ac.close(); }, 300);
+      }
+      function frame(now) {
+        var t = now - start;
+        if (t < 60) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }           // ein einziger Blitz
+        else if (t < 220) { var k = (t - 60) / 160; face(ctx, W, H, 0.3 + 0.9 * (1 - Math.pow(1 - k, 3)), 0.06); } // rast heran
+        else if (t < 1400) face(ctx, W, H, 1.2 + (t - 220) / 1180 * 0.12, 0.025);          // zittert vor dir
+        else if (t < 1700) { face(ctx, W, H, 1.32, 0.01); ctx.fillStyle = 'rgba(0,0,0,' + ((t - 1400) / 300) + ')'; ctx.fillRect(0, 0, W, H); }
+        else { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); wrap.querySelector('.got').classList.add('on'); setTimeout(end, 2600); return; }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+      wrap.addEventListener('click', function () { if (performance.now() - start > 1700) end(); });
+    }
+    toggle.addEventListener('change', function () {
+      if (!toggle.checked && !busy) jumpscare();
+      else if (!toggle.checked) toggle.checked = true;
+    });
   })();
 
   // ---------- Designs ----------
