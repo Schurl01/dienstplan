@@ -133,6 +133,19 @@
 .dd-big { margin: 0; font-family: var(--font-display); font-size: 22px; }
 .daydlg .route .code { font-size: clamp(24px, 7vw, 32px); }
 .daydlg .linkbtn { justify-self: start; }
+/* Crew Call / Pickup (nur für Joel) */
+.crew { display: grid; gap: 10px; padding: 12px; border-radius: 12px; border: 1px dashed var(--gold); background: var(--gold-soft); }
+.crew > b { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.crew-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.crew label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.crew input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; }
+.crew input:focus { outline: none; border-color: var(--gold); }
+.crew .hint { margin: 0; font-size: 12px; color: var(--muted); }
+.crew .bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.crew .go { padding: 8px 16px; border-radius: 999px; border: 0; background: var(--gold); color: var(--on-gold); font: inherit; font-weight: 600; cursor: pointer; }
+.crew .go:disabled { opacity: .6; }
+.crew .cmsg { font-size: 13px; }
+.crew-tag { color: var(--gold); font-weight: 600; }
 /* Design-Auswahl */
 .themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
 @media (max-width: 420px) { .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -282,10 +295,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 [hidden] { display: none !important; }
 /* Countdown */
 .countdown { display: grid; gap: 8px; }
-.cd-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.cd { display: grid; justify-items: center; min-width: 64px; padding: 10px 8px 8px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
-.cd b { font-family: var(--font-data); font-size: clamp(24px, 5vw, 32px); font-weight: 600; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
-.cd small { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+.countdown { gap: 6px; }
+.cd-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cd { display: grid; justify-items: center; min-width: 44px; padding: 6px 6px 5px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); }
+.cd b { font-family: var(--font-data); font-size: 18px; font-weight: 600; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.cd small { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 /* Ortszeit + Wetter */
 .local { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 14px; }
 .local:empty { display: none; }
@@ -697,6 +711,61 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     if (events.length) try { localStorage.setItem(SEEN_KEY, JSON.stringify({ t: Date.now(), items: cur })); } catch (e) {}
   })();
 
+  // ---------- Crew Call / Pickup: nur für Joel (Geräte mit GitHub-Schlüssel), gespeichert als private GitHub-Variable ----------
+  var CREW_VAR = 'CREW_NOTES', CREW_CACHE = 'dienstplan-crew', ghToken = null;
+  try { ghToken = localStorage.getItem('dienstplan-gh-token'); } catch (e) {}
+  var isJoel = !!ghToken && /\.github\.io$/.test(location.hostname);
+  var crew = { flights: {}, dest: {} };
+  try { var crewCached = JSON.parse(localStorage.getItem(CREW_CACHE) || 'null'); if (crewCached && crewCached.flights) crew = crewCached; } catch (e) {}
+  var ghApi = 'https://api.github.com/repos/' + location.hostname.split('.')[0] + '/' + (location.pathname.split('/')[1] || '');
+  function ghReq(method, path, body) {
+    return fetch(ghApi + path, {
+      method: method, body: body ? JSON.stringify(body) : undefined,
+      headers: { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
+    });
+  }
+  function crewCache() { try { localStorage.setItem(CREW_CACHE, JSON.stringify(crew)); } catch (e) {} }
+  function loadCrew() {
+    if (!isJoel) return;
+    ghReq('GET', '/actions/variables/' + CREW_VAR).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j) return;
+      var v = JSON.parse(j.value);
+      if (v && v.flights) { crew = v; crewCache(); renderStatus(); renderList(); }
+    }).catch(function () {});
+  }
+  function saveCrew() {
+    var body = { name: CREW_VAR, value: JSON.stringify(crew) };
+    return ghReq('PATCH', '/actions/variables/' + CREW_VAR, body).then(function (r) {
+      return r.status === 404 ? ghReq('POST', '/actions/variables', body) : r;
+    }).then(function (r) {
+      if (r.status === 401) throw new Error('Der GitHub-Schlüssel ist abgelaufen oder ungültig.');
+      if (r.status === 403 || r.status === 404) throw new Error('Dem GitHub-Schlüssel fehlt die Berechtigung „Variables: Read and write“.');
+      if (!r.ok) throw new Error('GitHub hat mit Fehler ' + r.status + ' geantwortet.');
+      crewCache();
+    });
+  }
+  function crewOf(e) { return isJoel && e && e.kind === 'flight' ? crew.flights[idOf(e)] || null : null; }
+  function crewText(c) {
+    if (!c) return '';
+    var p = [];
+    if (c.call) p.push('Crew Call ' + c.call);
+    if (c.pickup) p.push('Pickup ' + c.pickup);
+    if (c.note) p.push(c.note);
+    return p.join(' · ');
+  }
+  function crewForm(e) {
+    var id = idOf(e), c = crew.flights[id], sug = !c && crew.dest[e.from];
+    var v = c || sug || {};
+    return '<form class="crew" data-id="' + esc(id) + '" data-from="' + e.from + '">' +
+      '<b>🔒 Nur für dich · ' + esc(city(e.from)) + '</b>' +
+      '<div class="crew-row"><label>Crew Call<input type="time" name="call" value="' + esc(v.call || '') + '"></label>' +
+      '<label>Pickup<input type="time" name="pickup" value="' + esc(v.pickup || '') + '"></label></div>' +
+      '<label>Notiz<input type="text" name="note" maxlength="120" placeholder="z. B. Hotel, Treffpunkt" value="' + esc(c ? c.note || '' : '') + '"></label>' +
+      (sug ? '<p class="hint">Vorschlag: deine Zeiten vom letzten Mal in ' + esc(city(e.from)) + '.</p>' : '') +
+      '<div class="bar"><button type="submit" class="go">Speichern</button><span class="cmsg" role="status"></span></div>' +
+      '</form>';
+  }
+
   // ---------- Flug-Historie (über alle Monate, vom Build verschlüsselt mitgeliefert) ----------
   var hist = [];
   try { hist = JSON.parse(document.getElementById('history').textContent); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
@@ -734,6 +803,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       else if (duty && duty.kind === 'duty') html += '<span class="pill duty"><span class="dot"></span>' + esc(duty.label) + '</span><div class="status-title">Heute ' + esc(duty.label) + ' bis ' + fmtTime.format(duty.end) + '</div><p class="status-sub">' + esc(duty.hint || '') + '</p>';
       else if (stay) html += '<span class="pill ground"><span class="dot"></span>Aufenthalt</span><div class="status-title">' + flag(last.to) + 'In ' + esc(city(last.to)) + '</div><p class="status-sub">Gelandet ' + fmtShort.format(last.end) + ', Rückflug in ' + until(last.stayUntil - now) + '</p>';
       else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(city(HOME)) + '</div>';
+      if (stay && crewText(crewOf(nextF))) html += '<p class="status-sub crew-tag">🔒 ' + esc(crewText(crewOf(nextF))) + '</p>';
       if (stay) { place = last.to; placeLabel = 'Joel ist hier'; }
       else if (nextF) { place = nextF.to === HOME ? nextF.from : nextF.to; placeLabel = 'Nächstes Ziel'; }
       if (nextF) {
@@ -889,7 +959,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
         '<span class="t">' + e.arr + (e.arrPlus ? '<sup>' + e.arrPlus + '</sup>' : '') + '</span><span class="c">' + flag(e.to) + esc(city(e.to)) + '</span></span>' + state + '</div>' +
         '<div class="meta"><span class="mono">' + esc(e.from) + '–' + esc(e.to) + '</span><span>Flugzeit ' + dur(e.end - e.start) + '</span>' +
         (km(e.from, e.to) ? '<span>' + fmtNum.format(Math.round(km(e.from, e.to))) + ' km</span>' : '') +
-        (e.ac ? '<span>' + esc(AIRCRAFT[e.ac] || e.ac) + '</span>' : '') + (e.report ? '<span>Dienstbeginn ' + e.report + '</span>' : '') + '</div>' +
+        (e.ac ? '<span>' + esc(AIRCRAFT[e.ac] || e.ac) + '</span>' : '') + (e.report ? '<span>Dienstbeginn ' + e.report + '</span>' : '') +
+        (crewText(crewOf(e)) ? '<span class="crew-tag">🔒 ' + esc(crewText(crewOf(e))) + '</span>' : '') + '</div>' +
         (e.end > now ? trackLinks(e, false) : '') + '</div>' + stay;
     }
     var allDay = e.end - e.start >= 864e5 - 60000;
@@ -1042,6 +1113,24 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var s = ev.target.closest('[data-show]');
     if (s) { closeDay(); showInList(s.getAttribute('data-show')); }
   });
+  dayDlg.addEventListener('submit', function (ev) {
+    var form = ev.target.closest('form.crew'); if (!form) return;
+    ev.preventDefault();
+    var id = form.getAttribute('data-id'), from = form.getAttribute('data-from'), msg = form.querySelector('.cmsg'), btn = form.querySelector('.go');
+    var v = { call: form.elements.call.value, pickup: form.elements.pickup.value, note: form.elements.note.value.trim() };
+    var prev = crew.flights[id];
+    if (v.call || v.pickup || v.note) crew.flights[id] = v; else delete crew.flights[id];
+    if (v.call || v.pickup) crew.dest[from] = { call: v.call, pickup: v.pickup };
+    btn.disabled = true; msg.style.color = ''; msg.textContent = 'Wird gespeichert …';
+    saveCrew().then(function () {
+      msg.textContent = 'Gespeichert ✓';
+      var hint = form.querySelector('.hint'); if (hint) hint.remove();
+      renderStatus(); renderList();
+    }, function (err) {
+      if (prev) crew.flights[id] = prev; else delete crew.flights[id];
+      msg.style.color = 'var(--sick)'; msg.textContent = err.message;
+    }).then(function () { btn.disabled = false; });
+  });
   function row(label, value) { return '<div class="dd-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
   function openDay(k) {
     var now = new Date(), evs = byDay[k] || [], away = awayDays[k], html = '';
@@ -1064,6 +1153,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
           row('In Schweizer Zeit', fmtTime.format(e.start) + ' – ' + fmtTime.format(e.end) + (dayKey(e.end) !== dayKey(e.start) ? ' (+1)' : '')) +
           '</div>' +
           (e.stayUntil ? '<p class="dd-stay">' + flag(e.to) + 'Danach Aufenthalt in ' + esc(city(e.to)) + ' bis ' + fmtShort.format(e.stayUntil) + '</p>' : '') +
+          (isJoel && e.from !== HOME && e.end > now ? crewForm(e) : '') +
           (e.end > now && e.to !== HOME ? '<div class="local" data-ap="' + e.to + '" data-label="Jetzt am Ziel"></div>' : '') +
           trackLinks(e, e.start <= now && now < e.end) +
           '</article>';
@@ -1821,6 +1911,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   if (events.length) renderCal();
   renderStatus(); renderStats(); renderFav(); renderChanges(); renderList(); renderMap();
   if (curTheme === 'retro') flap();
+  loadCrew();
   var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderMap, 200); });
   setInterval(function () { renderStatus(); renderMap(); }, 60000);
 })();
