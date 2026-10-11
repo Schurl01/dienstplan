@@ -3,32 +3,66 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: Nachthimmel mit langsam querenden Mini-Flugzeugen; Status-Panel, Statistik-Kacheln, Routenkarte, darunter Kalender + Dienstliste. Bewusst nur dunkles Theme. */
+/* Layout: Himmel mit langsam querenden Mini-Flugzeugen; Status → Kalender → Statistik → Routenkarte → Dienstliste.
+   Dunkel ist Standard, "Hell" per Umschalter (data-theme="light", gemerkt im Browser). */
 :root {
   --bg: #0a1120;
   --bg-deep: #070c17;
+  --glow: #14203a;
   --surface: rgba(236, 228, 212, 0.04);
   --surface-2: rgba(236, 228, 212, 0.07);
   --line: rgba(236, 228, 212, 0.11);
   --ink: #ece4d4;
   --muted: #8f99ab;
   --gold: #d2b17c;
-  --gold-soft: rgba(210, 177, 124, 0.14);
+  --gold-soft: rgba(210, 177, 124, 0.16);
+  --on-gold: #070c17;
   --land: #16213a;
+  --land-edge: rgba(236, 228, 212, 0.06);
+  --grat: rgba(236, 228, 212, 0.04);
   --live: #8fc9ab;
   --live-soft: rgba(143, 201, 171, 0.13);
-  --duty: #e2b36a;
-  --duty-soft: rgba(226, 179, 106, 0.13);
+  --duty: #b4a6ff;
+  --duty-soft: rgba(180, 166, 255, 0.16);
   --sick: #e39aac;
-  --sick-soft: rgba(227, 154, 172, 0.13);
+  --sick-soft: rgba(227, 154, 172, 0.14);
+  --plane: 236, 228, 212;
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Manrope", "Segoe UI", system-ui, sans-serif;
   --font-data: "JetBrains Mono", ui-monospace, Consolas, monospace;
   color-scheme: dark;
 }
+:root[data-theme="light"] {
+  --bg: #eef2f7;
+  --bg-deep: #e3e9f1;
+  --glow: #ffffff;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: rgba(20, 32, 51, 0.06);
+  --line: rgba(20, 32, 51, 0.11);
+  --ink: #142033;
+  --muted: #5b6678;
+  --gold: #946b22;
+  --gold-soft: rgba(176, 130, 50, 0.15);
+  --on-gold: #ffffff;
+  --land: #d5dde8;
+  --land-edge: rgba(20, 32, 51, 0.08);
+  --grat: rgba(20, 32, 51, 0.05);
+  --live: #24774f;
+  --live-soft: rgba(36, 119, 79, 0.12);
+  --duty: #6247c9;
+  --duty-soft: rgba(98, 71, 201, 0.12);
+  --sick: #b33a5a;
+  --sick-soft: rgba(179, 58, 90, 0.11);
+  --plane: 20, 32, 51;
+  color-scheme: light;
+}
 * { box-sizing: border-box; }
 html { background: var(--bg-deep); }
-body { background: radial-gradient(120% 80% at 50% -10%, #14203a 0%, var(--bg) 45%, var(--bg-deep) 100%) fixed; background-color: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; min-height: 100vh; }
+body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 45%, var(--bg-deep) 100%) fixed; background-color: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; min-height: 100vh; transition: background-color .3s, color .3s; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.theme { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.theme button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.theme button[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); }
 #sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: grid; gap: 32px; }
 h1, h2 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
@@ -67,8 +101,8 @@ header p { margin: 0; color: var(--muted); max-width: 52ch; }
 .links { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; transition: border-color .2s, color .2s; }
 .btn:hover { border-color: var(--gold); color: var(--gold); }
-.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--bg-deep); }
-.btn.primary:hover { color: var(--bg-deep); filter: brightness(1.08); }
+.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
+.btn.primary:hover { color: var(--on-gold); filter: brightness(1.08); }
 .btn:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .next { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
 .next b { font-weight: 600; color: var(--gold); }
@@ -86,14 +120,14 @@ header p { margin: 0; color: var(--muted); max-width: 52ch; }
 /* Karte */
 .mapbox { padding: 8px; overflow: hidden; }
 #map { width: 100%; display: block; }
-#map .land { fill: var(--land); stroke: rgba(236, 228, 212, 0.06); stroke-width: 0.5; }
-#map .grat { fill: none; stroke: rgba(236, 228, 212, 0.04); stroke-width: 0.5; }
+#map .land { fill: var(--land); stroke: var(--land-edge); stroke-width: 0.5; }
+#map .grat { fill: none; stroke: var(--grat); stroke-width: 0.5; }
 #map .rt { fill: none; stroke: var(--gold); stroke-width: 1.4; stroke-linecap: round; }
 #map .rt.past { stroke: var(--muted); stroke-opacity: 0.35; stroke-dasharray: 2 4; }
 #map .rt.glow { stroke-width: 5; stroke-opacity: 0.12; }
-#map .ap { fill: var(--bg-deep); stroke: var(--gold); stroke-width: 1.4; }
+#map .ap { fill: var(--bg); stroke: var(--gold); stroke-width: 1.4; }
 #map .ap.home { fill: var(--gold); }
-#map .lbl { fill: var(--ink); font-family: var(--font-data); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; }
+#map .lbl { fill: var(--ink); font-family: var(--font-data); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
 #map .liveplane { fill: var(--live); }
 .maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); padding: 8px 12px 6px; }
 .maplegend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -101,27 +135,28 @@ header p { margin: 0; color: var(--muted); max-width: 52ch; }
 .maplegend i.p { border-top: 1.5px dashed var(--muted); opacity: 0.6; }
 
 /* Kalender + Liste */
-.main { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; align-items: start; }
-@media (max-width: 780px) { .main { grid-template-columns: minmax(0, 1fr); } }
-.cal { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); padding: 18px; display: grid; gap: 12px; }
-@media (max-width: 780px) { .cal { position: static; } }
+.cal { padding: 20px; display: grid; gap: 14px; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.cal-head h2 { font-size: 20px; }
+.cal-head h2 { font-size: 24px; }
 .cal-head button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 16px; cursor: pointer; }
 .cal-head button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
 .cal-head button:disabled { opacity: 0.3; cursor: default; }
-.grid7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.grid7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .wd { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-align: center; }
-.day { aspect-ratio: 1; max-width: 100%; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 2px; display: grid; place-items: center; align-content: center; gap: 2px; }
+.day { aspect-ratio: 1; max-width: 100%; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 2px; display: grid; place-items: center; align-content: center; gap: 3px; }
+@media (min-width: 640px) { .day { aspect-ratio: 1.5; font-size: 15px; } .day .tag { font-size: 11px !important; } }
 .day .n { font-variant-numeric: tabular-nums; line-height: 1; }
 .day .tag { font-family: var(--font-data); font-size: 9px; line-height: 1; font-weight: 600; }
+.day.flight { border-color: var(--gold); }
+.day.duty { border-color: var(--duty); }
+.day.sick { border-color: var(--sick); }
 .day.out { visibility: hidden; }
 .day.has { cursor: pointer; color: var(--ink); }
 .day.flight { background: var(--gold-soft); color: var(--gold); }
 .day.duty { background: var(--duty-soft); color: var(--duty); }
 .day.sick { background: var(--sick-soft); color: var(--sick); }
 .day.away:not(.flight):not(.duty):not(.sick) { background: repeating-linear-gradient(135deg, var(--gold-soft) 0 3px, transparent 3px 7px); color: var(--gold); }
-.day.today { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+.day.today { box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); font-weight: 700; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -150,26 +185,85 @@ details.past summary { cursor: pointer; font-weight: 600; color: var(--muted); }
 details.past[open] summary { margin-bottom: 18px; }
 details.past .list { opacity: 0.75; }
 .empty { color: var(--muted); }
-footer { font-size: 12px; color: var(--muted); }
+footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn:hover { color: var(--gold); }
+.sections { display: grid; gap: 32px; }
+.sections > .off { display: none; }
+.iconbtn { width: 38px; height: 38px; flex: none; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 15px; cursor: pointer; transition: border-color .2s, color .2s; }
+.iconbtn:hover { border-color: var(--gold); color: var(--gold); }
+.iconbtn:focus-visible, .order button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.settings { width: min(460px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; border: 1px solid var(--line); border-radius: 20px; padding: 22px; background: var(--bg); color: var(--ink); font-family: var(--font-body); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
+.settings[open] { display: grid; gap: 22px; }
+.settings::backdrop { background: rgba(5, 8, 15, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.set-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.set-group { display: grid; gap: 10px; justify-items: start; }
+.settings .hint { margin: 0; font-size: 12px; color: var(--muted); }
+.order { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; }
+.order li { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.order li.is-off .nm { color: var(--muted); text-decoration: line-through; }
+.order .num { font-family: var(--font-data); font-size: 12px; color: var(--gold); width: 1.2em; }
+.order label { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+.order input { accent-color: var(--gold); width: 16px; height: 16px; }
+.order button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: none; color: var(--ink); cursor: pointer; font-size: 14px; }
+.order button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.order button:disabled { opacity: 0.25; cursor: default; }
+.adminbox { border-top: 1px solid var(--line); padding-top: 18px; justify-items: stretch; }
+.adminbox summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.adminbox[open] summary { margin-bottom: 6px; }
+.admin { display: grid; gap: 14px; }
+.admin label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.admin input[type="url"], .admin input[type="password"] { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.admin input:focus { outline: none; border-color: var(--gold); }
+.admin .hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+.admin .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.admin .check { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 13px; }
+.admin button.go { padding: 10px 18px; border-radius: 999px; border: 0; background: var(--gold); color: var(--on-gold); font: inherit; font-weight: 600; cursor: pointer; }
+.admin button.go:disabled { opacity: 0.6; cursor: default; }
+.admin .msg { margin: 0; font-size: 14px; min-height: 1.4em; }
+.admin .msg.err { color: var(--sick); }
+.admin .msg.ok { color: var(--live); }
 @media (prefers-reduced-motion: reduce) { .pill.live .dot { animation: none; } }
 </style>
 
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="wrap">
   <header>
-    <span class="eyebrow">Dienstplan · Cabin Crew</span>
+    <div class="topbar">
+      <span class="eyebrow">Dienstplan · Cabin Crew</span>
+      <button type="button" class="iconbtn" id="set-open" aria-label="Einstellungen" title="Einstellungen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
     <h1><em>Joels</em> Dienstplan</h1>
     <p>Alle Flüge und Dienste mit Live-Verfolgung. Abflug- und Ankunftszeiten gelten jeweils in Ortszeit des Flughafens.</p>
   </header>
 
-  <section class="status panel" id="status" aria-live="polite"></section>
+  <div class="sections" id="sections">
+  <section class="status panel" id="status" data-sec="status" aria-live="polite"></section>
 
-  <section style="display:grid;gap:14px">
+  <section class="cal panel" data-sec="cal" aria-label="Kalender">
+    <div class="cal-head">
+      <button type="button" id="prev" aria-label="Vorheriger Monat">‹</button>
+      <h2 id="month"></h2>
+      <button type="button" id="next" aria-label="Nächster Monat">›</button>
+    </div>
+    <div class="grid7" id="weekdays"></div>
+    <div class="grid7" id="days"></div>
+    <div class="legend">
+      <span><i style="background:var(--gold-soft);border:1px solid var(--gold)"></i>Flug</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--gold-soft) 0 3px,transparent 3px 7px);border:1px solid var(--line)"></i>Unterwegs</span>
+      <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Standby/Reserve</span>
+      <span><i style="background:var(--sick-soft);border:1px solid var(--sick)"></i>Krank</span>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:14px" data-sec="stats">
     <div class="sec-head"><h2>In Zahlen</h2><span class="eyebrow" id="stat-month"></span></div>
     <div class="stats" id="stats"></div>
   </section>
 
-  <section style="display:grid;gap:14px" id="mapsec">
+  <section style="display:grid;gap:14px" id="mapsec" data-sec="map">
     <div class="sec-head"><h2>Routen</h2><span class="eyebrow">Alle Flüge im Plan</span></div>
     <div class="panel mapbox">
       <svg id="map" role="img" aria-label="Weltkarte mit Joels Flugrouten"></svg>
@@ -177,35 +271,62 @@ footer { font-size: 12px; color: var(--muted); }
     </div>
   </section>
 
-  <div class="main">
-    <aside class="cal panel" aria-label="Kalender">
-      <div class="cal-head">
-        <button type="button" id="prev" aria-label="Vorheriger Monat">‹</button>
-        <h2 id="month"></h2>
-        <button type="button" id="next" aria-label="Nächster Monat">›</button>
-      </div>
-      <div class="grid7" id="weekdays"></div>
-      <div class="grid7" id="days"></div>
-      <div class="legend">
-        <span><i style="background:var(--gold-soft);border:1px solid var(--gold)"></i>Flug</span>
-        <span><i style="background:repeating-linear-gradient(135deg,var(--gold-soft) 0 3px,transparent 3px 7px);border:1px solid var(--line)"></i>Unterwegs</span>
-        <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Standby/Reserve</span>
-        <span><i style="background:var(--sick-soft);border:1px solid var(--sick)"></i>Krank</span>
-      </div>
-    </aside>
-
-    <section style="min-width:0;display:grid;gap:24px">
-      <h2>Kommende Dienste</h2>
-      <div class="list" id="upcoming"></div>
-      <details class="past" id="pastbox">
-        <summary id="pastsum">Vergangene Dienste</summary>
-        <div class="list" id="past"></div>
-      </details>
-    </section>
+  <section style="min-width:0;display:grid;gap:24px" data-sec="list">
+    <h2>Kommende Dienste</h2>
+    <div class="list" id="upcoming"></div>
+    <details class="past" id="pastbox">
+      <summary id="pastsum">Vergangene Dienste</summary>
+      <div class="list" id="past"></div>
+    </details>
+  </section>
   </div>
 
-  <footer id="foot"></footer>
+  <footer><span id="foot"></span></footer>
 </div>
+
+<dialog class="settings" id="settings" aria-labelledby="set-title">
+  <div class="set-head">
+    <h2 id="set-title">Einstellungen</h2>
+    <button type="button" class="iconbtn" id="set-close" aria-label="Schliessen">✕</button>
+  </div>
+
+  <div class="set-group">
+    <span class="eyebrow">Darstellung</span>
+    <div class="theme" role="group" aria-label="Darstellung">
+      <button type="button" data-theme-set="light" aria-pressed="false">Hell</button>
+      <button type="button" data-theme-set="dark" aria-pressed="true">Dunkel</button>
+    </div>
+  </div>
+
+  <div class="set-group">
+    <span class="eyebrow">Reihenfolge und Anzeige</span>
+    <ol class="order" id="order"></ol>
+    <button type="button" class="linkbtn" id="order-reset">Standard wiederherstellen</button>
+  </div>
+
+  <p class="hint">Darstellung und Reihenfolge werden nur auf diesem Gerät gespeichert.</p>
+
+  <details class="set-group adminbox" id="adminbox" hidden>
+    <summary>Nur für Joel: Plan aktualisieren</summary>
+    <form class="admin" id="admin">
+      <p class="hint" style="margin:0">Füge den neuen Kalender-Link aus dem SWISS-Portal ein. Er wird geheim auf GitHub gespeichert, danach baut sich die Seite neu. Deine Freunde brauchen ihn nicht.</p>
+      <label for="adm-url">Neuer Kalender-Link
+        <input type="url" id="adm-url" placeholder="https://schedule.swiss.com/….ics" required autocomplete="off">
+      </label>
+      <div id="adm-tokenbox">
+        <label for="adm-token">GitHub-Schlüssel
+          <input type="password" id="adm-token" placeholder="github_pat_…" autocomplete="off">
+          <span class="hint">Nur beim ersten Mal nötig. Wird nur auf diesem Gerät gespeichert.</span>
+        </label>
+      </div>
+      <div class="row">
+        <button type="submit" class="go" id="adm-go">Plan aktualisieren</button>
+        <button type="button" class="linkbtn" id="adm-forget" hidden>Gespeicherten Schlüssel vergessen</button>
+      </div>
+      <p class="msg" id="adm-msg" role="status"></p>
+    </form>
+  </details>
+</dialog>
 
 <script type="text/plain" id="ics">__ICS_B64__</script>
 <script type="application/json" id="land">__LAND_JSON__</script>
@@ -560,6 +681,26 @@ footer { font-size: 12px; color: var(--muted); }
     g.classList.add('flash'); setTimeout(function () { g.classList.remove('flash'); }, 1400);
   });
 
+  // ---------- Hell / Dunkel ----------
+  var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', redrawSky = null;
+  function applyTheme(t) {
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+    document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === (t === 'light' ? 'light' : 'dark'))); });
+    planeRGB = getComputedStyle(document.documentElement).getPropertyValue('--plane').trim() || planeRGB;
+    if (redrawSky) redrawSky();
+  }
+  var savedTheme = null;
+  try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+  applyTheme(savedTheme);
+  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-theme-set');
+      try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+      applyTheme(t);
+    });
+  });
+
   // ---------- Himmel mit Mini-Flugzeugen ----------
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   (function sky() {
@@ -579,13 +720,13 @@ footer { font-size: 12px; color: var(--muted); }
       planes.forEach(function (p) {
         if (p.trail) {
           var g = ctx.createLinearGradient(p.x, p.y, p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v));
-          g.addColorStop(0, 'rgba(236,228,212,' + (p.a * 0.5) + ')'); g.addColorStop(1, 'rgba(236,228,212,0)');
+          g.addColorStop(0, 'rgba(' + planeRGB + ',' + (p.a * 0.5) + ')'); g.addColorStop(1, 'rgba(' + planeRGB + ',0)');
           ctx.strokeStyle = g; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(p.x - p.size * 0.5 * p.dir, p.y);
           ctx.lineTo(p.x - p.trail * p.dir, p.y - p.drift * p.trail / Math.abs(p.v)); ctx.stroke();
         }
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
         var s = p.size / 24; ctx.scale(s, s); ctx.translate(-12, -12);
-        ctx.fillStyle = 'rgba(236,228,212,' + p.a + ')'; ctx.fill(shape); ctx.restore();
+        ctx.fillStyle = 'rgba(' + planeRGB + ',' + p.a + ')'; ctx.fill(shape); ctx.restore();
       });
     }
     function tick(t) {
@@ -601,9 +742,221 @@ footer { font-size: 12px; color: var(--muted); }
     var count = W < 600 ? 6 : 10;
     for (var i = 0; i < count; i++) planes.push(spawn(i, true));
     addEventListener('resize', function () { resize(); if (reduce) draw(); });
+    redrawSky = draw;
     if (reduce) { draw(); return; }
     document.addEventListener('visibilitychange', function () { running = !document.hidden; last = 0; if (running) requestAnimationFrame(tick); });
     requestAnimationFrame(tick);
+  })();
+
+  // ---------- Einstellungen: Fenster, Reihenfolge, Anzeige ----------
+  var dlg = document.getElementById('settings');
+  function openSettings() { renderOrder(); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); }
+  document.getElementById('set-open').addEventListener('click', openSettings);
+  document.getElementById('set-close').addEventListener('click', function () { dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
+  dlg.addEventListener('click', function (ev) { if (ev.target === dlg && dlg.close) dlg.close(); });
+
+  var LAYOUT_KEY = 'dienstplan-layout';
+  var SEC_NAMES = { status: 'Wo ist Joel?', cal: 'Kalender', stats: 'In Zahlen', map: 'Routen-Karte', list: 'Kommende Dienste' };
+  var DEFAULT_ORDER = ['status', 'cal', 'stats', 'map', 'list'];
+  var layout = { order: DEFAULT_ORDER.slice(), off: [] };
+  try {
+    var ls = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null');
+    if (ls && Array.isArray(ls.order)) {
+      var known = ls.order.filter(function (k) { return SEC_NAMES[k]; });
+      DEFAULT_ORDER.forEach(function (k) { if (known.indexOf(k) < 0) known.push(k); });
+      layout = { order: known, off: Array.isArray(ls.off) ? ls.off.filter(function (k) { return SEC_NAMES[k]; }) : [] };
+    }
+  } catch (e) {}
+  function saveLayout() { try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch (e) {} }
+  function applyLayout() {
+    var wrap = document.getElementById('sections');
+    layout.order.forEach(function (k) {
+      var el = wrap.querySelector('[data-sec="' + k + '"]');
+      if (!el) return;
+      wrap.appendChild(el);
+      el.classList.toggle('off', layout.off.indexOf(k) >= 0);
+    });
+  }
+  function renderOrder() {
+    var ol = document.getElementById('order');
+    ol.innerHTML = layout.order.map(function (k, i) {
+      var on = layout.off.indexOf(k) < 0;
+      return '<li class="' + (on ? '' : 'is-off') + '"><span class="num">' + (i + 1) + '</span>' +
+        '<label><input type="checkbox" id="show-' + k + '" data-k="' + k + '"' + (on ? ' checked' : '') + '><span class="nm">' + SEC_NAMES[k] + '</span></label>' +
+        '<button type="button" data-up="' + i + '" aria-label="' + SEC_NAMES[k] + ' nach oben"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+        '<button type="button" data-down="' + i + '" aria-label="' + SEC_NAMES[k] + ' nach unten"' + (i === layout.order.length - 1 ? ' disabled' : '') + '>↓</button></li>';
+    }).join('');
+  }
+  function layoutChanged(focusSel) {
+    saveLayout(); applyLayout(); renderOrder(); renderMap();
+    if (focusSel) { var f = document.querySelector(focusSel); if (f && !f.disabled) f.focus(); }
+  }
+  document.getElementById('order').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var o = layout.order, i;
+    if (b.hasAttribute('data-up')) { i = +b.getAttribute('data-up'); o.splice(i - 1, 0, o.splice(i, 1)[0]); layoutChanged('[data-up="' + (i - 1) + '"]'); }
+    else if (b.hasAttribute('data-down')) { i = +b.getAttribute('data-down'); o.splice(i + 1, 0, o.splice(i, 1)[0]); layoutChanged('[data-down="' + (i + 1) + '"]'); }
+  });
+  document.getElementById('order').addEventListener('change', function (ev) {
+    var k = ev.target.getAttribute('data-k'); if (!k) return;
+    layout.off = layout.off.filter(function (x) { return x !== k; });
+    if (!ev.target.checked) layout.off.push(k);
+    layoutChanged('#show-' + k);
+  });
+  document.getElementById('order-reset').addEventListener('click', function () { layout = { order: DEFAULT_ORDER.slice(), off: [] }; layoutChanged(); });
+  applyLayout();
+
+  // ---------- Plan aktualisieren (nur auf GitHub Pages) ----------
+  // Speichert den neuen Link als verschlüsseltes Secret ICS_URL und startet den Workflow.
+  (function admin() {
+    if (!/\.github\.io$/.test(location.hostname)) return;
+    var TOKEN_KEY = 'dienstplan-gh-token';
+    var owner = location.hostname.split('.')[0];
+    var repo = location.pathname.split('/')[1] || (owner + '.github.io');
+    var api = 'https://api.github.com/repos/' + owner + '/' + repo;
+    var form = document.getElementById('admin'), box = document.getElementById('adminbox');
+    var urlIn = document.getElementById('adm-url'), tokIn = document.getElementById('adm-token');
+    var tokBox = document.getElementById('adm-tokenbox'), forget = document.getElementById('adm-forget');
+    var go = document.getElementById('adm-go'), msg = document.getElementById('adm-msg');
+    box.hidden = false;
+
+    function saved() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+    function syncToken() { var t = saved(); tokBox.hidden = !!t; forget.hidden = !t; }
+    function say(text, kind) { msg.textContent = text; msg.className = 'msg' + (kind ? ' ' + kind : ''); }
+    syncToken();
+    box.addEventListener('toggle', function () { if (box.open) { syncToken(); urlIn.focus(); } });
+    if (location.hash === '#admin') { box.open = true; openSettings(); }
+    forget.addEventListener('click', function () { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} syncToken(); say('Schlüssel wurde von diesem Gerät entfernt.'); });
+
+    var naclReady = null;
+    function loadNacl() {
+      if (window.nacl) return Promise.resolve();
+      if (!naclReady) naclReady = new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js';
+        s.onload = res; s.onerror = function () { rej(new Error('Verschlüsselung konnte nicht geladen werden. Bitte Internetverbindung prüfen.')); };
+        document.head.appendChild(s);
+      });
+      return naclReady;
+    }
+    function gh(token, method, path, body) {
+      return fetch(api + path, {
+        method: method,
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (r) {
+        if (r.status === 401) throw new Error('Der GitHub-Schlüssel ist ungültig oder abgelaufen. Bitte einen neuen erstellen.');
+        if (r.status === 403 || r.status === 404) throw new Error('Der Schlüssel hat keine Berechtigung für das Repository „' + repo + '“. Er braucht „Secrets“ und „Actions“ mit Lesen und Schreiben.');
+        if (!r.ok) throw new Error('GitHub hat mit Fehler ' + r.status + ' geantwortet. Bitte später nochmals versuchen.');
+        return r.status === 204 || r.status === 201 ? null : r.json();
+      });
+    }
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      var link = urlIn.value.trim();
+      var token = saved() || tokIn.value.trim();
+      if (!/^https:\/\/\S+\.ics(\?\S*)?$/i.test(link)) { say('Das sieht nicht wie ein Kalender-Link aus. Er beginnt mit https:// und endet auf .ics.', 'err'); return; }
+      if (!token) { say('Bitte zuerst den GitHub-Schlüssel einfügen.', 'err'); tokIn.focus(); return; }
+      go.disabled = true;
+      try {
+        say('Link wird verschlüsselt …');
+        await loadNacl();
+        var pk = await gh(token, 'GET', '/actions/secrets/public-key');
+        var sealed = sealedBox(new TextEncoder().encode(link), b64dec(pk.key));
+        say('Link wird auf GitHub gespeichert …');
+        await gh(token, 'PUT', '/actions/secrets/ICS_URL', { encrypted_value: b64enc(sealed), key_id: pk.key_id });
+        try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+        tokIn.value = ''; syncToken();
+        var wfs = await gh(token, 'GET', '/actions/workflows');
+        var wf = wfs.workflows.filter(function (w) { return w.name === 'Dienstplan aktualisieren'; })[0] || wfs.workflows[0];
+        if (!wf) throw new Error('Kein Workflow im Repository gefunden.');
+        var started = Date.now();
+        await gh(token, 'POST', '/actions/workflows/' + wf.id + '/dispatches', { ref: 'main' });
+        var run = null;
+        for (var i = 0; i < 60; i++) {
+          await sleep(5000);
+          say('Seite wird neu gebaut … (' + Math.round((Date.now() - started) / 1000) + ' s)');
+          var runs = await gh(token, 'GET', '/actions/workflows/' + wf.id + '/runs?event=workflow_dispatch&per_page=1');
+          run = runs.workflow_runs[0];
+          if (run && Date.parse(run.created_at) >= started - 60000 && run.status === 'completed') break;
+        }
+        if (!run || run.status !== 'completed') { say('Das dauert länger als üblich. Schau in ein paar Minuten unter GitHub → Actions nach.', 'err'); return; }
+        if (run.conclusion !== 'success') { say('Die Aktualisierung ist fehlgeschlagen. Stimmt der Link? Details findest du auf GitHub unter Actions.', 'err'); return; }
+        say('Fertig! Die Seite lädt gleich neu.', 'ok');
+        await sleep(4000);
+        location.reload();
+      } catch (e) {
+        say(e.message || 'Unbekannter Fehler.', 'err');
+      } finally {
+        go.disabled = false;
+      }
+    });
+
+    // libsodium "sealed box" (crypto_box_seal), wie von GitHub für Secrets verlangt
+    function sealedBox(msg, pk) {
+      var eph = nacl.box.keyPair();
+      var nonceIn = new Uint8Array(64); nonceIn.set(eph.publicKey); nonceIn.set(pk, 32);
+      var nonce = blake2b(nonceIn, 24);
+      var box = nacl.box(msg, nonce, pk, eph.secretKey);
+      var out = new Uint8Array(32 + box.length); out.set(eph.publicKey); out.set(box, 32);
+      return out;
+    }
+    function b64dec(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+    function b64enc(u) { var s = ''; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); }
+
+    // Kompaktes BLAKE2b (ohne Schlüssel), nach RFC 7693
+    function blake2b(input, outlen) {
+      var IV = [0xF3BCC908, 0x6A09E667, 0x84CAA73B, 0xBB67AE85, 0xFE94F82B, 0x3C6EF372, 0x5F1D36F1, 0xA54FF53A,
+        0xADE682D1, 0x510E527F, 0x2B3E6C1F, 0x9B05688C, 0xFB41BD6B, 0x1F83D9AB, 0x137E2179, 0x5BE0CD19];
+      var SIGMA = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
+        11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4, 7, 9, 3, 1, 13, 12, 11, 14, 2, 6, 5, 10, 4, 0, 15, 8,
+        9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13, 2, 12, 6, 10, 0, 11, 8, 3, 4, 13, 7, 5, 15, 14, 1, 9,
+        12, 5, 1, 15, 14, 13, 4, 10, 0, 7, 6, 3, 9, 2, 8, 11, 13, 11, 7, 14, 12, 1, 3, 9, 5, 0, 15, 4, 8, 6, 2, 10,
+        6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5, 10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3]
+        .map(function (x) { return x * 2; });
+      var v = new Uint32Array(32), m = new Uint32Array(32), h = new Uint32Array(IV);
+      var b = new Uint8Array(128), t = 0, c = 0;
+      h[0] ^= 0x01010000 ^ outlen;
+      function add(a, bb) { var o0 = v[a] + v[bb], o1 = v[a + 1] + v[bb + 1]; if (o0 >= 0x100000000) o1++; v[a] = o0; v[a + 1] = o1; }
+      function addc(a, b0, b1) { var o0 = v[a] + b0, o1 = v[a + 1] + b1; if (o0 >= 0x100000000) o1++; v[a] = o0; v[a + 1] = o1; }
+      function G(a, bb, cc, d, ix, iy) {
+        var x0 = m[ix], x1 = m[ix + 1], y0 = m[iy], y1 = m[iy + 1], p, q;
+        add(a, bb); addc(a, x0, x1);
+        p = v[d] ^ v[a]; q = v[d + 1] ^ v[a + 1]; v[d] = q; v[d + 1] = p;
+        add(cc, d);
+        p = v[bb] ^ v[cc]; q = v[bb + 1] ^ v[cc + 1]; v[bb] = (p >>> 24) ^ (q << 8); v[bb + 1] = (q >>> 24) ^ (p << 8);
+        add(a, bb); addc(a, y0, y1);
+        p = v[d] ^ v[a]; q = v[d + 1] ^ v[a + 1]; v[d] = (p >>> 16) ^ (q << 16); v[d + 1] = (q >>> 16) ^ (p << 16);
+        add(cc, d);
+        p = v[bb] ^ v[cc]; q = v[bb + 1] ^ v[cc + 1]; v[bb] = (q >>> 31) ^ (p << 1); v[bb + 1] = (p >>> 31) ^ (q << 1);
+      }
+      function compress(last) {
+        var i;
+        for (i = 0; i < 16; i++) { v[i] = h[i]; v[i + 16] = IV[i]; }
+        v[24] ^= t; v[25] ^= (t / 0x100000000);
+        if (last) { v[28] = ~v[28]; v[29] = ~v[29]; }
+        for (i = 0; i < 32; i++) m[i] = b[4 * i] ^ (b[4 * i + 1] << 8) ^ (b[4 * i + 2] << 16) ^ (b[4 * i + 3] << 24);
+        for (i = 0; i < 12; i++) {
+          var s = i * 16;
+          G(0, 8, 16, 24, SIGMA[s], SIGMA[s + 1]); G(2, 10, 18, 26, SIGMA[s + 2], SIGMA[s + 3]);
+          G(4, 12, 20, 28, SIGMA[s + 4], SIGMA[s + 5]); G(6, 14, 22, 30, SIGMA[s + 6], SIGMA[s + 7]);
+          G(0, 10, 20, 30, SIGMA[s + 8], SIGMA[s + 9]); G(2, 12, 22, 24, SIGMA[s + 10], SIGMA[s + 11]);
+          G(4, 14, 16, 26, SIGMA[s + 12], SIGMA[s + 13]); G(6, 8, 18, 28, SIGMA[s + 14], SIGMA[s + 15]);
+        }
+        for (i = 0; i < 16; i++) h[i] = h[i] ^ v[i] ^ v[i + 16];
+      }
+      for (var i = 0; i < input.length; i++) {
+        if (c === 128) { t += c; compress(false); c = 0; }
+        b[c++] = input[i];
+      }
+      t += c; while (c < 128) b[c++] = 0; compress(true);
+      var out = new Uint8Array(outlen);
+      for (i = 0; i < outlen; i++) out[i] = h[i >> 2] >> (8 * (i & 3));
+      return out;
+    }
   })();
 
   document.getElementById('foot').textContent = data.stamp ? 'Dienstplan zuletzt abgerufen am ' + fmtStamp.format(data.stamp) + '. Wird regelmässig aktualisiert; ganz kurzfristige Änderungen können fehlen.' : '';
