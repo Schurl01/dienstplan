@@ -22,7 +22,8 @@ $body = $template.Replace('__ICS_B64__', $b64).Replace('__LAND_JSON__', $landJso
 $head = '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
   '<meta name="robots" content="noindex">' +
-  '<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style></head><body>'
+  '<script>try{if(localStorage.getItem("dienstplan-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>' +
+  '<style>html,body{margin:0}html{background:#0a1120}html[data-theme="light"]{background:#eef2f7}[hidden]{display:none!important}img{max-width:100%}</style></head><body>'
 $html = $head + $body + '</body></html>'
 
 # Seite mit dem Passwort aus dem Secret PAGE_PASSWORD verschluesseln (PBKDF2-SHA256 + AES-GCM),

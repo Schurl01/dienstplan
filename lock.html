@@ -182,7 +182,15 @@ form.away { opacity: 0; transform: translateY(-16px); }
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}
   if (saved) {
-    open(saved).then(show, function () { try { localStorage.removeItem(KEY); } catch (e) {} f.hidden = false; pw.focus(); });
+    // Bereits angemeldet: Animation trotzdem zeigen, Entschlüsseln läuft parallel.
+    // Ton nur, wenn der Browser ihn ohne Klick erlaubt.
+    var ac = reduce ? null : makeAudio();
+    if (ac && ac.state === 'running') playTakeoff(ac); else if (ac && ac.close) ac.close();
+    Promise.all([open(saved), takeoff()]).then(function (r) { show(r[0]); }, function () {
+      var t = document.getElementById('takeoff'); if (t) t.remove();
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      f.classList.remove('away'); f.hidden = false; pw.focus();
+    });
   } else { f.hidden = false; pw.focus(); }
 })();
 </script>

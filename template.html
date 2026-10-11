@@ -63,7 +63,11 @@ body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--b
 .theme { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
 .theme button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
 .theme button[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); }
-#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; animation: fadein 1.4s ease both; }
+.wrap { animation: pagein .9s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes pagein { from { opacity: 0; transform: translateY(12px); } }
+@keyframes fadein { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .wrap, #sky { animation: none; } }
 .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: grid; gap: 32px; }
 h1, h2 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.02; letter-spacing: -0.02em; }
