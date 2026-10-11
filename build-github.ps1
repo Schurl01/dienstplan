@@ -106,11 +106,15 @@ $body = $template.Replace('__ICS_B64__', $b64).Replace('__LAND_JSON__', $landJso
 
 $head = '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
-  '<meta name="robots" content="noindex">' +
+  '<meta name="robots" content="noindex"><title>Joels Dienstplan</title>' +
+  '<link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" type="image/png" href="icon-180.png"><link rel="manifest" href="manifest.webmanifest">' +
+  '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">' +
+  '<meta name="apple-mobile-web-app-title" content="Dienstplan"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0a1120">' +
   '<script>try{var t=localStorage.getItem("dienstplan-theme");if(t&&t!=="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>' +
   '<style>html,body{margin:0}html{background:#0a1120}html[data-theme="light"]{background:#eef2f7}html[data-theme="autumn"]{background:#1a0f1f}' +
   'html[data-theme="sunset"]{background:#2a1638}html[data-theme="retro"]{background:#0b0b0c}html[data-theme="radar"]{background:#04140f}' +
-  '[hidden]{display:none!important}img{max-width:100%}</style></head><body>'
+  '[hidden]{display:none!important}img{max-width:100%}' +
+  'body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}</style></head><body>'
 $html = $head + $body + '</body></html>'
 
 # --- Seite mit PAGE_PASSWORD verschluesseln, damit weder Webseite noch Build-Dateien den Plan im Klartext enthalten ---
@@ -121,6 +125,12 @@ $page = $lock.Replace('__SALT__', $enc.salt).Replace('__IV__', $enc.iv).Replace(
 $outDir = Join-Path $dir 'public'
 New-Item -ItemType Directory -Force $outDir | Out-Null
 [IO.File]::WriteAllText((Join-Path $outDir 'index.html'), $page, (New-Object Text.UTF8Encoding $false))
+
+# Web-App: Name, Farben und Icons fuer "Zum Home-Bildschirm" (Icons erzeugt der Workflow aus icon.html)
+$manifest = '{"name":"Joels Dienstplan","short_name":"Dienstplan","start_url":"./","scope":"./","display":"standalone",' +
+  '"background_color":"#0a1120","theme_color":"#0a1120","icons":[{"src":"icon-180.png","sizes":"180x180","type":"image/png"},' +
+  '{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}]}'
+[IO.File]::WriteAllText((Join-Path $outDir 'manifest.webmanifest'), $manifest, (New-Object Text.UTF8Encoding $false))
 
 $count = ([regex]::Matches($text, 'BEGIN:VEVENT')).Count
 Write-Output "Seite gebaut: $count Eintraege, $($current.Count) Fluege im Plan"

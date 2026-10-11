@@ -104,6 +104,21 @@
   color-scheme: dark;
 }
 :root[data-theme="radar"] h1, :root[data-theme="radar"] .status-title { text-shadow: 0 0 18px rgba(61, 255, 154, 0.35); }
+/* Tagesfenster */
+.daydlg { width: min(520px, calc(100% - 24px)); }
+.daydlg h2 { font-size: 26px; text-transform: none; }
+.dd-body { display: grid; gap: 14px; }
+.dd-card { display: grid; gap: 14px; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.dd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dd-head .fno { font-size: 18px; }
+.dd-grid { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.dd-row { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.dd-row span { color: var(--muted); }
+.dd-row b { font-weight: 600; text-align: right; }
+.dd-stay { margin: 0; font-size: 13px; color: var(--muted); }
+.dd-big { margin: 0; font-family: var(--font-display); font-size: 22px; }
+.daydlg .route .code { font-size: clamp(24px, 7vw, 32px); }
+.daydlg .linkbtn { justify-self: start; }
 /* Design-Auswahl */
 .themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
 @media (max-width: 420px) { .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -404,6 +419,14 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 
   <footer><span id="foot"></span></footer>
 </div>
+
+<dialog class="settings daydlg" id="daydlg" aria-labelledby="day-title">
+  <div class="set-head">
+    <div><h2 id="day-title"></h2><span class="eyebrow" id="day-rel"></span></div>
+    <button type="button" class="iconbtn" id="day-close" aria-label="Schliessen">✕</button>
+  </div>
+  <div class="dd-body" id="day-body"></div>
+</dialog>
 
 <dialog class="settings" id="settings" aria-labelledby="set-title">
   <div class="set-head">
@@ -957,9 +980,9 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       else if (evs.some(function (e) { return e.kind === 'sick'; })) { cls += ' sick'; tag = 'KR'; label += ' krank'; }
       else if (evs.some(function (e) { return e.kind === 'duty'; })) { cls += ' duty'; tag = evs[0].label === 'Standby' ? 'SBY' : 'RES'; label += ' ' + evs[0].label; }
       if (awayDays[k]) { cls += ' away'; if (!tag) tag = awayDays[k]; label += ' in ' + city(awayDays[k]); }
-      if (evs.length) cls += ' has';
+      if (evs.length || awayDays[k]) cls += ' has';
       if (k === todayKey) cls += ' today';
-      html += evs.length
+      html += evs.length || awayDays[k]
         ? '<button type="button" class="' + cls + '" data-k="' + k + '" aria-label="' + esc(label) + '"><span class="n">' + d + '</span><span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span></button>'
         : '<div class="' + cls + '"><span class="n">' + d + '</span>' + (tag ? '<span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span>' : '') + '</div>';
     }
@@ -971,11 +994,67 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   document.getElementById('next').onclick = function () { if (mi < months.length - 1) { mi++; renderCal(); } };
   document.getElementById('days').addEventListener('click', function (ev) {
     var b = ev.target.closest('button[data-k]'); if (!b) return;
-    var g = document.getElementById('d-' + b.getAttribute('data-k')); if (!g) return;
+    openDay(b.getAttribute('data-k'));
+  });
+  function showInList(k) {
+    var g = document.getElementById('d-' + k); if (!g) return;
     if (g.closest('#pastbox')) document.getElementById('pastbox').open = true;
     g.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     g.classList.add('flash'); setTimeout(function () { g.classList.remove('flash'); }, 1400);
+  }
+
+  // ---------- Tagesfenster: alle Infos zu einem Kalendertag ----------
+  var dayDlg = document.getElementById('daydlg');
+  function closeDay() { if (dayDlg.close) dayDlg.close(); else dayDlg.removeAttribute('open'); }
+  document.getElementById('day-close').addEventListener('click', closeDay);
+  dayDlg.addEventListener('click', function (ev) {
+    if (ev.target === dayDlg) closeDay();
+    var s = ev.target.closest('[data-show]');
+    if (s) { closeDay(); showInList(s.getAttribute('data-show')); }
   });
+  function row(label, value) { return '<div class="dd-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
+  function openDay(k) {
+    var now = new Date(), evs = byDay[k] || [], away = awayDays[k], html = '';
+    document.getElementById('day-title').textContent = fmtDay.format(new Date(k + 'T12:00:00Z'));
+    document.getElementById('day-rel').textContent = relDay(k, dayKey(now));
+    evs.forEach(function (e) {
+      if (e.kind === 'flight') {
+        var st = e.end <= now ? '<span class="chip done">Gelandet</span>' : e.start <= now ? '<span class="chip live">In der Luft</span>' : '';
+        var p = e.start <= now && now < e.end ? (now - e.start) / (e.end - e.start) : (e.end <= now ? 1 : -1);
+        html += '<article class="dd-card">' +
+          '<div class="dd-head"><span class="fno">' + esc(e.fno) + '</span>' + st + changeChip(e) + '</div>' +
+          routeBlock(e, p) +
+          '<div class="dd-grid">' +
+          row('Abflug', e.dep + ' Ortszeit ' + esc(city(e.from))) +
+          row('Ankunft', e.arr + (e.arrPlus ? ' (' + e.arrPlus + ' Tag)' : '') + ' Ortszeit ' + esc(city(e.to))) +
+          (e.report ? row('Dienstbeginn', e.report + ' Uhr') : '') +
+          row('Flugzeit', dur(e.end - e.start)) +
+          (km(e.from, e.to) ? row('Distanz', fmtNum.format(Math.round(km(e.from, e.to))) + ' km') : '') +
+          (e.ac ? row('Flugzeug', esc(AIRCRAFT[e.ac] || e.ac)) : '') +
+          row('In Schweizer Zeit', fmtTime.format(e.start) + ' – ' + fmtTime.format(e.end) + (dayKey(e.end) !== dayKey(e.start) ? ' (+1)' : '')) +
+          '</div>' +
+          (e.stayUntil ? '<p class="dd-stay">' + flag(e.to) + 'Danach Aufenthalt in ' + esc(city(e.to)) + ' bis ' + fmtShort.format(e.stayUntil) + '</p>' : '') +
+          (e.end > now && e.to !== HOME ? '<div class="local" data-ap="' + e.to + '" data-label="Jetzt am Ziel"></div>' : '') +
+          trackLinks(e, e.start <= now && now < e.end) +
+          '</article>';
+      } else {
+        var allDay = e.end - e.start >= 864e5 - 60000;
+        html += '<article class="dd-card"><div class="dd-head"><span class="chip ' + (e.kind === 'sick' ? 'sick' : 'duty') + '">' + esc(e.label) + '</span>' + changeChip(e) + '</div>' +
+          '<div class="dd-grid">' + row('Zeit', allDay ? 'ganzer Tag' : fmtTime.format(e.start) + ' – ' + fmtTime.format(e.end) + ' Uhr') + '</div>' +
+          (e.hint ? '<p class="dd-stay">' + esc(e.hint) + '</p>' : '') + '</article>';
+      }
+    });
+    if (!evs.some(function (e) { return e.kind === 'flight'; }) && away) {
+      html += '<article class="dd-card"><div class="dd-head"><span class="chip done">Aufenthalt</span></div>' +
+        '<p class="dd-big">' + flag(away) + 'Joel ist in ' + esc(city(away)) + '</p>' +
+        '<div class="local" data-ap="' + away + '" data-label="Gerade dort"></div></article>';
+    }
+    if (evs.length) html += '<button type="button" class="linkbtn" data-show="' + k + '">In der Liste anzeigen</button>';
+    document.getElementById('day-body').innerHTML = html;
+    if (dayDlg.showModal) dayDlg.showModal(); else dayDlg.setAttribute('open', '');
+    tick(); fillLocal();
+    if (curTheme === 'retro') flap();
+  }
 
   // ---------- Monat als Bild (PNG) ----------
   function loadImg(src) {
