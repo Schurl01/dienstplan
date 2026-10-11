@@ -28,7 +28,7 @@
 html, body { margin: 0; height: 100%; }
 body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 55%, var(--deep) 100%); background-color: var(--bg); color: var(--ink); font-family: "Manrope", "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; padding-inline: 16px; }
 form, #board { width: 100%; max-width: 340px; display: grid; gap: 14px; text-align: center; }
-#board[hidden] { display: none; }
+[hidden] { display: none !important; }
 #board button { font-size: 17px; padding: 14px 16px; }
 h1 { font-family: "Fraunces", Georgia, serif; font-weight: 400; font-size: 40px; margin: 0; }
 h1 em { color: var(--gold); }
@@ -142,6 +142,48 @@ form.away, #board.away { opacity: 0; transform: translateY(-16px); }
     } catch (e) {}
   }
 
+  // ---------- Ton als echte Audiodatei vorbereiten (iPhone spielt <audio> zuverlässiger als Web Audio) ----------
+  function toWav(buf) {
+    var ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate, size = 44 + len * ch * 2;
+    var dv = new DataView(new ArrayBuffer(size)), o = 0, c, i;
+    function str(s) { for (var k = 0; k < s.length; k++) dv.setUint8(o++, s.charCodeAt(k)); }
+    function u32(v) { dv.setUint32(o, v, true); o += 4; }
+    function u16(v) { dv.setUint16(o, v, true); o += 2; }
+    str('RIFF'); u32(size - 8); str('WAVE'); str('fmt '); u32(16); u16(1); u16(ch); u32(sr); u32(sr * ch * 2); u16(ch * 2); u16(16); str('data'); u32(len * ch * 2);
+    var data = []; for (c = 0; c < ch; c++) data.push(buf.getChannelData(c));
+    for (i = 0; i < len; i++) for (c = 0; c < ch; c++) { var x = Math.max(-1, Math.min(1, data[c][i])); dv.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); o += 2; }
+    return new Blob([dv], { type: 'audio/wav' });
+  }
+  var takeoffAudio = null, unlocked = false;
+  (function prerender() {
+    if (reduce) return;
+    try {
+      var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return;
+      var off = new OAC(2, 22050 * 4, 22050);
+      playTakeoff(off);
+      var ready = function (buf) { var a = new Audio(URL.createObjectURL(toWav(buf))); a.preload = 'auto'; a.setAttribute('playsinline', ''); takeoffAudio = a; };
+      var p = off.startRendering();
+      if (p && p.then) p.then(ready, function () {}); else off.oncomplete = function (e) { ready(e.renderedBuffer); };
+    } catch (e) {}
+  })();
+  function audioPlay(a) { try { var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+  // Im Fingertipp aufrufen: gibt die Audiodatei frei, ohne schon hörbar zu sein
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    if (!takeoffAudio || unlocked) return;
+    unlocked = true;
+    takeoffAudio.muted = true;
+    try {
+      var p = takeoffAudio.play();
+      var stop = function () { takeoffAudio.pause(); takeoffAudio.currentTime = 0; };
+      if (p && p.then) p.then(stop, function () {}); else stop();
+    } catch (e) {}
+  }
+  function startSound(fallbackCtx) {
+    if (takeoffAudio) { takeoffAudio.muted = false; takeoffAudio.currentTime = 0; audioPlay(takeoffAudio); if (fallbackCtx && fallbackCtx.close) fallbackCtx.close(); return; }
+    playTakeoff(fallbackCtx);
+  }
+
   // ---------- Animation: "Willkommen an Bord", dann Start mit Kondensstreifen ----------
   var PLANE = new Path2D('M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z');
   function takeoff() {
@@ -205,7 +247,8 @@ form.away, #board.away { opacity: 0; transform: translateY(-16px); }
 
   f.addEventListener('submit', async function (ev) {
     ev.preventDefault();
-    var ac = reduce ? null : makeAudio(); // im Klick erzeugen, damit der Browser Ton erlaubt
+    var ac = null;
+    if (!reduce) { if (takeoffAudio) unlockAudio(); else ac = makeAudio(); } // im Klick, damit der Browser Ton erlaubt
     go.disabled = true; go.textContent = 'Wird geöffnet …'; err.textContent = '';
     var html;
     try {
@@ -217,7 +260,7 @@ form.away, #board.away { opacity: 0; transform: translateY(-16px); }
       return;
     }
     try { localStorage.setItem(KEY, pw.value); } catch (e) {}
-    playTakeoff(ac);
+    if (!reduce) startSound(ac);
     await takeoff();
     show(html);
   });
@@ -239,7 +282,8 @@ form.away, #board.away { opacity: 0; transform: translateY(-16px); }
     board.hidden = false; boardGo.focus();
     boardGo.addEventListener('click', function () {
       boardGo.disabled = true;
-      playTakeoff(makeAudio());
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      startSound(takeoffAudio ? null : makeAudio());
       Promise.all([ready, takeoff()]).then(function (r) { show(r[0]); }, backToForm);
     }, { once: true });
   } else { f.hidden = false; pw.focus(); }
