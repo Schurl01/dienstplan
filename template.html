@@ -145,6 +145,15 @@ body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--b
 h1, h2 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.02; letter-spacing: -0.02em; }
 h1 em { font-style: italic; color: var(--gold); }
+/* Easter Egg: Kapitäns-Durchsage (lange auf "Joels" drücken) */
+#captain { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; transition: text-shadow 1s ease; }
+#captain.hold { text-shadow: 0 0 22px var(--gold), 0 0 4px var(--gold); }
+.pa { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 50; width: min(520px, calc(100% - 32px)); transform: translate(-50%, 20px); opacity: 0;
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--gold); background: var(--bg); color: var(--ink);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45); transition: opacity .4s ease, transform .4s ease; pointer-events: none; font-size: 14px; line-height: 1.5; }
+.pa.on { opacity: 1; transform: translate(-50%, 0); }
+.pa .mic { font-size: 20px; line-height: 1.3; }
+.pa b { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
 h2 { font-size: 24px; letter-spacing: -0.01em; }
 .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
@@ -351,7 +360,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
-    <h1><em>Joels</em> Dienstplan</h1>
+    <h1><em id="captain">Joels</em> Dienstplan</h1>
     <p>Alle Flüge und Dienste mit Live-Verfolgung. Abflug- und Ankunftszeiten gelten jeweils in Ortszeit des Flughafens.</p>
     <div class="changes panel" id="changes" role="status" hidden></div>
   </header>
@@ -1206,6 +1215,111 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       msg.textContent = 'Das Bild konnte nicht erstellt werden. Bitte nochmals versuchen.';
     } finally { btn.disabled = false; }
   });
+
+  // ---------- Easter Egg: Kapitäns-Durchsage (lange auf "Joels" drücken) ----------
+  (function () {
+    var el = document.getElementById('captain'), downAt = 0, busy = false, safety = null;
+    function cancel() { el.classList.remove('hold'); downAt = 0; }
+    el.addEventListener('pointerdown', function () { if (!busy) { downAt = Date.now(); el.classList.add('hold'); } });
+    el.addEventListener('pointerleave', cancel);
+    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    // Auslösen beim Loslassen: zählt als Berührung, damit Ton und Stimme auch auf dem iPhone erlaubt sind
+    el.addEventListener('pointerup', function () {
+      var held = downAt && Date.now() - downAt >= 800;
+      cancel();
+      if (held && !busy) announce();
+    });
+
+    function sayFno(f) { return f.airline.split('').join(' ') + ' ' + f.num; }
+    function sayTime(hm) { var p = hm.split(':'); return +p[0] + ' Uhr' + (+p[1] ? ' ' + +p[1] : ''); }
+    function sayDur(ms) {
+      var m = Math.round(ms / 60000), h = Math.floor(m / 60); m %= 60;
+      return (h ? h + (h === 1 ? ' Stunde' : ' Stunden') : '') + (h && m ? ' und ' : '') + (m ? m + (m === 1 ? ' Minute' : ' Minuten') : '');
+    }
+    function sayDay(d) {
+      var r = relDay(dayKey(d), dayKey(new Date()));
+      if (r === 'heute' || r === 'morgen') return r;
+      if (r === 'in 2 Tagen') return 'übermorgen';
+      return 'am ' + new Intl.DateTimeFormat('de-CH', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(d).replace(/\./g, '');
+    }
+    function sayWeather(code) {
+      var w = weatherCache[code];
+      if (!w || !w.at || w.failed) return '';
+      return ' Am Zielort erwarten uns ' + w.temp + ' Grad, ' + wmo(w.code, w.day).t.toLowerCase() + '.';
+    }
+    function script(spooky) {
+      var now = new Date();
+      var live = flights.filter(function (f) { return f.start <= now && now < f.end; })[0];
+      var nextF = flights.filter(function (f) { return f.start > now; })[0];
+      var s = spooky
+        ? 'Meine Damen und Herren ... hier spricht Ihr Kapitän. Willkommen an Bord ... des Geisterflugs. Wir fliegen heute mitten durch die Geisterstunde.'
+        : 'Meine Damen und Herren, hier spricht Ihr Kapitän. Herzlich willkommen an Bord von Joels Dienstplan.';
+      if (live) {
+        s += ' Wir befinden uns auf dem Flug ' + sayFno(live) + ' von ' + city(live.from) + ' nach ' + city(live.to) + '. Die Landung ist in etwa ' + sayDur(live.end - now) + ' geplant.' + sayWeather(live.to);
+      } else if (nextF) {
+        s += ' Unser nächster Flug, ' + sayFno(nextF) + ' von ' + city(nextF.from) + ' nach ' + city(nextF.to) + ', startet ' + sayDay(nextF.start) + ' um ' + sayTime(nextF.dep) + ' Ortszeit' +
+          (spooky ? ' ... falls bis dahin noch alle an Bord sind.' : '.') + ' Die Flugzeit beträgt ' + sayDur(nextF.end - nextF.start) + '.' + sayWeather(nextF.to === HOME ? nextF.from : nextF.to);
+      } else {
+        s += ' Für die nächsten Tage sind keine Flüge geplant. Joel geniesst den Boden unter den Füssen.';
+      }
+      s += spooky
+        ? ' Bitte bleiben Sie angeschnallt ... egal, was Sie draussen vor dem Fenster sehen. Und falls Sie ein Kratzen an der Kabinentür hören ... das ist ganz sicher nur die Crew. Hehehe. Happy Halloween.'
+        : ' Bitte schnallen Sie sich an, lehnen Sie sich zurück und geniessen Sie den Flug. Vielen Dank.';
+      return s;
+    }
+    function pickVoice(vs) {
+      var de = vs.filter(function (v) { return /^de/i.test(v.lang); });
+      return de.filter(function (v) { return /CH/i.test(v.lang); })[0] || de.filter(function (v) { return /DE/i.test(v.lang); })[0] || de[0] || null;
+    }
+    function chime(ac) {
+      if (!ac) return;
+      try {
+        var t0 = ac.currentTime + 0.05, master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination);
+        [[880, 0], [659.25, 0.34]].forEach(function (n) {
+          var o = ac.createOscillator(), g = ac.createGain(), t = t0 + n[1];
+          o.type = 'sine'; o.frequency.value = n[0];
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+          o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.4);
+        });
+      } catch (e) {}
+    }
+    var pa = null;
+    function showPA(text) {
+      if (!pa) { pa = document.createElement('div'); pa.className = 'pa'; pa.setAttribute('role', 'status'); document.body.appendChild(pa); }
+      pa.innerHTML = '<span class="mic" aria-hidden="true">🎙️</span><div><b>Durchsage aus dem Cockpit</b></div>';
+      pa.querySelector('div').appendChild(document.createTextNode(text.replace(/ \.\.\. /g, ' … ')));
+      requestAnimationFrame(function () { pa.classList.add('on'); });
+    }
+    function announce() {
+      busy = true;
+      var spooky = curTheme === 'autumn', text = script(spooky), ac = null, synth = window.speechSynthesis;
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      try { var AC = window.AudioContext || window.webkitAudioContext; if (AC) { ac = new AC(); if (ac.resume) ac.resume(); } } catch (e) {}
+      chime(ac);
+      // Stimme im Fingertipp "entsperren" (iPhone), echte Durchsage nach dem Gong
+      if (synth) { try { synth.cancel(); var u0 = new SpeechSynthesisUtterance(' '); u0.volume = 0; synth.speak(u0); } catch (e) {} }
+      showPA(text);
+      function done() {
+        clearTimeout(safety);
+        if (pa) pa.classList.remove('on');
+        busy = false;
+        if (ac && ac.close) setTimeout(function () { ac.close(); }, 500);
+      }
+      setTimeout(function () {
+        if (!synth || !window.SpeechSynthesisUtterance) { safety = setTimeout(done, 12000); return; }
+        var u = new SpeechSynthesisUtterance(text.replace(/ \.\.\. /g, ', '));
+        u.lang = 'de-DE';
+        var v = pickVoice(synth.getVoices()); if (v) { u.voice = v; u.lang = v.lang; }
+        u.rate = spooky ? 0.82 : 0.98; u.pitch = spooky ? 0.5 : 0.95;
+        u.onend = u.onerror = function () { setTimeout(done, 800); };
+        synth.speak(u);
+        safety = setTimeout(done, 70000);
+      }, 1300);
+    }
+    // Stimmen laden (manche Browser liefern sie erst verzögert)
+    if (window.speechSynthesis) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = function () {}; } catch (e) {} }
+  })();
 
   // ---------- Designs ----------
   var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', sky = null, curTheme = 'dark';
