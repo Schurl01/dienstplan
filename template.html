@@ -192,6 +192,39 @@ details.past .list { opacity: 0.75; }
 footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
 .linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .linkbtn:hover { color: var(--gold); }
+[hidden] { display: none !important; }
+/* Countdown */
+.countdown { display: grid; gap: 8px; }
+.cd-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cd { display: grid; justify-items: center; min-width: 64px; padding: 10px 8px 8px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.cd b { font-family: var(--font-data); font-size: clamp(24px, 5vw, 32px); font-weight: 600; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.cd small { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+/* Ortszeit + Wetter */
+.local { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.local:empty { display: none; }
+.local .lc { font-weight: 700; }
+.local .lt .mono { font-size: 17px; color: var(--gold); }
+.local .lw { display: inline-flex; align-items: center; gap: 6px; }
+.local .wi { font-size: 20px; line-height: 1; }
+/* Änderungen seit letztem Besuch */
+.changes { display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 14px 16px; border-color: var(--gold); background: var(--gold-soft); margin-top: 6px; }
+.changes > div { flex: 1; min-width: 0; font-size: 14px; }
+.ch-ico { font-size: 18px; line-height: 1.3; }
+.ch-gone { color: var(--sick); }
+.ch-hint { color: var(--muted); font-size: 12px; }
+.iconbtn.sm { width: 28px; height: 28px; font-size: 12px; }
+.chip.new { background: var(--gold); color: var(--on-gold); }
+/* Lieblingsziele */
+.fav { padding: 18px 20px; display: grid; gap: 16px; }
+.fav-sum { display: flex; flex-wrap: wrap; gap: 6px 22px; color: var(--muted); font-size: 13px; }
+.fav-sum b { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ink); margin-right: 4px; }
+.fav-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fav-list li { display: grid; grid-template-columns: 22px minmax(0, 150px) minmax(0, 1fr) 40px; align-items: center; gap: 12px; }
+.fav-list .rk { font-family: var(--font-data); font-size: 12px; color: var(--gold); }
+.fav-list .fc { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav-list .bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.fav-list .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--gold-soft), var(--gold)); }
+.fav-list .cnt { text-align: right; font-size: 13px; color: var(--muted); }
 .flag { width: 16px; height: 12px; border-radius: 2px; object-fit: cover; vertical-align: -1px; margin-right: 6px; box-shadow: 0 0 0 1px var(--line); }
 .flag.sm { width: 12px; height: 9px; margin-right: 3px; vertical-align: 0; }
 .cal-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -247,6 +280,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     </div>
     <h1><em>Joels</em> Dienstplan</h1>
     <p>Alle Flüge und Dienste mit Live-Verfolgung. Abflug- und Ankunftszeiten gelten jeweils in Ortszeit des Flughafens.</p>
+    <div class="changes panel" id="changes" role="status" hidden></div>
   </header>
 
   <div class="sections" id="sections">
@@ -280,6 +314,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     <div class="stats" id="stats"></div>
   </section>
 
+  <section style="display:grid;gap:14px" data-sec="fav">
+    <div class="sec-head"><h2>Lieblingsziele</h2><span class="eyebrow" id="fav-since"></span></div>
+    <div class="panel fav" id="fav"></div>
+  </section>
+
   <section style="display:grid;gap:14px" id="mapsec" data-sec="map">
     <div class="sec-head"><h2>Routen</h2><span class="eyebrow">Alle Flüge im Plan</span></div>
     <div class="panel mapbox">
@@ -289,7 +328,14 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   </section>
 
   <section style="min-width:0;display:grid;gap:24px" data-sec="list">
-    <h2>Kommende Dienste</h2>
+    <div class="sec-head">
+      <h2>Kommende Dienste</h2>
+      <button type="button" class="btn" id="ics-export">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v4M10 16h4"/></svg>
+        <span>In meinen Kalender</span>
+      </button>
+    </div>
+    <p class="cal-msg" id="ics-msg" role="status" style="margin:-12px 0 0"></p>
     <div class="list" id="upcoming"></div>
     <details class="past" id="pastbox">
       <summary id="pastsum">Vergangene Dienste</summary>
@@ -347,6 +393,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 
 <script type="text/plain" id="ics">__ICS_B64__</script>
 <script type="application/json" id="land">__LAND_JSON__</script>
+<script type="application/json" id="history">__HISTORY_JSON__</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
@@ -522,6 +569,39 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   var byDay = {};
   events.forEach(function (e) { var k = dayKey(e.start); (byDay[k] = byDay[k] || []).push(e); });
 
+  // ---------- Neu / geändert seit dem letzten Besuch (pro Gerät) ----------
+  var SEEN_KEY = 'dienstplan-seen', changes = {}, removed = [];
+  function idOf(e) { return (e.kind === 'flight' ? e.fno : e.kind) + '|' + dayKey(e.start); }
+  function sigOf(e) { return e.kind === 'flight' ? [e.from, e.to, e.dep, e.arr].join(' ') : e.label + ' ' + fmtTime.format(e.start) + '-' + fmtTime.format(e.end); }
+  (function () {
+    var now = new Date(), cur = {}, all = {}, prev = null;
+    events.forEach(function (e) { all[idOf(e)] = 1; if (e.end > now) cur[idOf(e)] = sigOf(e); });
+    try { prev = JSON.parse(localStorage.getItem(SEEN_KEY) || 'null'); } catch (e) {}
+    if (prev && prev.items) {
+      Object.keys(cur).forEach(function (id) {
+        if (!(id in prev.items)) changes[id] = 'neu';
+        else if (prev.items[id] !== cur[id]) changes[id] = 'geändert';
+      });
+      Object.keys(prev.items).forEach(function (id) {
+        if (!all[id] && id.split('|')[1] >= dayKey(now)) removed.push(id);
+      });
+    }
+    if (events.length) try { localStorage.setItem(SEEN_KEY, JSON.stringify({ t: Date.now(), items: cur })); } catch (e) {}
+  })();
+
+  // ---------- Flug-Historie (über alle Monate, vom Build verschlüsselt mitgeliefert) ----------
+  var hist = [];
+  try { hist = JSON.parse(document.getElementById('history').textContent); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
+  (function () {
+    var seen = {};
+    hist.forEach(function (h) { seen[h.f + '|' + h.d] = 1; });
+    flights.forEach(function (f) {
+      var d = f.start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); // wie im Build: 20261012T111000Z
+      if (!seen[f.fno + '|' + d]) hist.push({ d: d, f: f.fno, a: f.from, b: f.to, m: Math.round((f.end - f.start) / 60000) });
+    });
+    hist.sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+  })();
+
   // ---------- Status ----------
   function renderStatus() {
     var now = new Date(), el = document.getElementById('status');
@@ -530,28 +610,86 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var nextF = flights.filter(function (f) { return f.start > now; })[0];
     var duty = events.filter(function (e) { return e.kind !== 'flight' && e.start <= now && now < e.end; })[0];
     var last = flights.filter(function (f) { return f.end <= now; }).pop();
-    var html = '';
+    var html = '', place = null, placeLabel = '';
     if (live) {
       var p = Math.min(1, Math.max(0, (now - live.start) / (live.end - live.start)));
       html += '<span class="pill live"><span class="dot"></span>In der Luft</span>' +
         '<div class="status-title">' + esc(live.fno) + ' von ' + esc(city(live.from)) + ' nach ' + esc(city(live.to)) + '</div>' +
         routeBlock(live, p) +
-        '<p class="status-sub">Landung in ' + until(live.end - now) + ' · ' + esc(AIRCRAFT[live.ac] || live.ac) + '</p>' +
+        countdown(live.end, 'Landung in') +
+        '<p class="status-sub">' + esc(AIRCRAFT[live.ac] || live.ac) + '</p>' +
         trackLinks(live, true);
+      place = live.to; placeLabel = 'Am Ziel';
     } else {
+      var stay = last && last.stayUntil && now < last.stayUntil;
       if (duty && duty.kind === 'sick') html += '<span class="pill sick"><span class="dot"></span>Heute krank</span><div class="status-title">Joel ist heute krankgeschrieben</div>';
       else if (duty && duty.kind === 'duty') html += '<span class="pill duty"><span class="dot"></span>' + esc(duty.label) + '</span><div class="status-title">Heute ' + esc(duty.label) + ' bis ' + fmtTime.format(duty.end) + '</div><p class="status-sub">' + esc(duty.hint || '') + '</p>';
-      else if (last && last.stayUntil && now < last.stayUntil) html += '<span class="pill ground"><span class="dot"></span>Aufenthalt</span><div class="status-title">In ' + esc(city(last.to)) + '</div><p class="status-sub">Gelandet ' + fmtShort.format(last.end) + ', Rückflug in ' + until(last.stayUntil - now) + '</p>';
+      else if (stay) html += '<span class="pill ground"><span class="dot"></span>Aufenthalt</span><div class="status-title">' + flag(last.to) + 'In ' + esc(city(last.to)) + '</div><p class="status-sub">Gelandet ' + fmtShort.format(last.end) + ', Rückflug in ' + until(last.stayUntil - now) + '</p>';
       else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(city(HOME)) + '</div>';
+      if (stay) { place = last.to; placeLabel = 'Joel ist hier'; }
+      else if (nextF) { place = nextF.to === HOME ? nextF.from : nextF.to; placeLabel = 'Nächstes Ziel'; }
       if (nextF) {
         html += '<div class="next"><span class="eyebrow">Nächster Flug</span><b class="mono">' + esc(nextF.fno) + '</b><span>' +
-          esc(city(nextF.from)) + ' → ' + esc(city(nextF.to)) + '</span><span>' + fmtShort.format(nextF.start) + ', ' + nextF.dep +
-          '</span><span class="status-sub">in ' + until(nextF.start - now) + '</span></div>' + routeBlock(nextF, -1) + trackLinks(nextF, false);
+          esc(city(nextF.from)) + ' → ' + flag(nextF.to) + esc(city(nextF.to)) + '</span><span>' + fmtShort.format(nextF.start) + ', ' + nextF.dep +
+          '</span></div>' + routeBlock(nextF, -1) + countdown(nextF.start, 'Abflug in') + trackLinks(nextF, false);
       } else {
         html += '<p class="status-sub">Keine weiteren Flüge im Plan.</p>';
       }
     }
+    if (place && place !== HOME && AP[place]) html += '<div class="local" data-ap="' + place + '" data-label="' + esc(placeLabel) + '"></div>';
     el.innerHTML = html;
+    tick(); fillLocal();
+  }
+
+  // ---------- Countdown (tickt jede Sekunde) ----------
+  function countdown(target, label) {
+    return '<div class="countdown" data-to="' + target.getTime() + '"><span class="eyebrow">' + esc(label) + '</span><div class="cd-row"></div></div>';
+  }
+  function cdHTML(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    function seg(v, l) { return '<span class="cd"><b>' + (v < 10 ? '0' : '') + v + '</b><small>' + l + '</small></span>'; }
+    return (d ? seg(d, d === 1 ? 'Tag' : 'Tage') : '') + seg(h, 'Std') + seg(m, 'Min') + seg(sec, 'Sek');
+  }
+  function tick() {
+    var now = Date.now();
+    document.querySelectorAll('.countdown[data-to]').forEach(function (el) {
+      el.querySelector('.cd-row').innerHTML = cdHTML(+el.getAttribute('data-to') - now);
+    });
+    document.querySelectorAll('.local [data-offset]').forEach(function (el) {
+      el.textContent = localTime(+el.getAttribute('data-offset'));
+    });
+  }
+  setInterval(tick, 1000);
+
+  // ---------- Ortszeit + Wetter am Zielort (Open-Meteo, ohne Schlüssel) ----------
+  var weatherCache = {};
+  var WMO = [[0, 'Klar', '☀️', '🌙'], [1, 'Überwiegend klar', '🌤️', '🌙'], [2, 'Teilweise bewölkt', '⛅', '☁️'], [3, 'Bewölkt', '☁️', '☁️'],
+    [48, 'Nebel', '🌫️', '🌫️'], [57, 'Nieselregen', '🌦️', '🌧️'], [67, 'Regen', '🌧️', '🌧️'], [77, 'Schnee', '🌨️', '🌨️'],
+    [82, 'Regenschauer', '🌦️', '🌧️'], [86, 'Schneeschauer', '🌨️', '🌨️'], [99, 'Gewitter', '⛈️', '⛈️']];
+  function wmo(code, day) { for (var i = 0; i < WMO.length; i++) if (code <= WMO[i][0]) return { t: WMO[i][1], i: day ? WMO[i][2] : WMO[i][3] }; return { t: '', i: '' }; }
+  function localTime(offsetSec) {
+    return new Intl.DateTimeFormat('de-CH', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' }).format(new Date(Date.now() + offsetSec * 1000));
+  }
+  function fillLocal() {
+    document.querySelectorAll('.local[data-ap]').forEach(function (el) {
+      var code = el.getAttribute('data-ap'), w = weatherCache[code];
+      if (w && Date.now() - w.at < 15 * 60000) { paintLocal(el, code, w); return; }
+      if (w && w.loading) return;
+      weatherCache[code] = { loading: true, at: 0 };
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + AP[code][2] + '&longitude=' + AP[code][1] + '&current=temperature_2m,weather_code,is_day&timezone=auto';
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        weatherCache[code] = { at: Date.now(), temp: Math.round(j.current.temperature_2m), code: j.current.weather_code, day: j.current.is_day, offset: j.utc_offset_seconds };
+        document.querySelectorAll('.local[data-ap="' + code + '"]').forEach(function (e2) { paintLocal(e2, code, weatherCache[code]); });
+      }).catch(function () { weatherCache[code] = { at: Date.now() - 14 * 60000, failed: true }; });
+    });
+  }
+  function paintLocal(el, code, w) {
+    if (w.failed) return;
+    var x = wmo(w.code, w.day);
+    el.innerHTML = '<span class="eyebrow">' + esc(el.getAttribute('data-label')) + '</span>' +
+      '<span class="lc">' + flag(code) + esc(city(code)) + '</span>' +
+      '<span class="lt"><span class="mono" data-offset="' + w.offset + '">' + localTime(w.offset) + '</span> Ortszeit</span>' +
+      '<span class="lw"><span class="wi">' + x.i + '</span>' + w.temp + '° · ' + esc(x.t) + '</span>';
   }
   function routeBlock(f, p) {
     var bar = p < 0 ? '<div class="track idle"></div>' :
@@ -629,9 +767,13 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   }
 
   // ---------- Liste ----------
+  function changeChip(e) {
+    var c = changes[idOf(e)];
+    return c ? '<span class="chip new">' + (c === 'neu' ? 'Neu' : 'Geändert') + '</span>' : '';
+  }
   function itemHTML(e, now) {
     if (e.kind === 'flight') {
-      var state = e.end <= now ? '<span class="chip done">Gelandet</span>' : (e.start <= now ? '<span class="chip live">In der Luft</span>' : '');
+      var state = (e.end <= now ? '<span class="chip done">Gelandet</span>' : (e.start <= now ? '<span class="chip live">In der Luft</span>' : '')) + changeChip(e);
       var stay = e.stayUntil ? '<div class="stay">Aufenthalt in ' + esc(city(e.to)) + ' bis ' + fmtShort.format(e.stayUntil) + '</div>' : '';
       return '<div class="item panel' + (e.start <= now && now < e.end ? ' is-live' : '') + '">' +
         '<div class="irow"><span class="fno">' + esc(e.fno) + '</span>' +
@@ -645,8 +787,78 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var allDay = e.end - e.start >= 864e5 - 60000;
     var time = allDay ? 'ganzer Tag' : fmtTime.format(e.start) + '–' + fmtTime.format(e.end);
     return '<div class="item panel"><div class="irow"><span class="chip ' + (e.kind === 'sick' ? 'sick' : 'duty') + '">' + esc(e.label) + '</span>' +
-      '<span class="mono">' + time + '</span></div>' + (e.hint ? '<div class="meta">' + esc(e.hint) + '</div>' : '') + '</div>';
+      '<span class="mono">' + time + '</span>' + changeChip(e) + '</div>' + (e.hint ? '<div class="meta">' + esc(e.hint) + '</div>' : '') + '</div>';
   }
+  function renderChanges() {
+    var el = document.getElementById('changes'), ids = Object.keys(changes);
+    if (!ids.length && !removed.length) { el.hidden = true; return; }
+    var nNew = ids.filter(function (i) { return changes[i] === 'neu'; }).length, nChg = ids.length - nNew, parts = [];
+    if (nNew) parts.push(nNew + (nNew === 1 ? ' neuer Eintrag' : ' neue Einträge'));
+    if (nChg) parts.push(nChg + ' geändert');
+    if (removed.length) parts.push(removed.length + ' entfällt');
+    var gone = removed.map(function (id) {
+      var p = id.split('|'), name = p[0] === 'duty' ? 'Dienst' : p[0] === 'sick' ? 'Krank' : p[0];
+      return esc(name) + ' am ' + fmtShort.format(new Date(p[1] + 'T12:00:00Z'));
+    });
+    el.innerHTML = '<span class="ch-ico" aria-hidden="true">✨</span><div><b>Seit deinem letzten Besuch:</b> ' + parts.join(', ') + '.' +
+      (gone.length ? '<br><span class="ch-gone">Entfällt: ' + gone.join(', ') + '</span>' : '') +
+      ' <span class="ch-hint">Markiert mit „Neu“ bzw. „Geändert“.</span></div>' +
+      '<button type="button" class="iconbtn sm" id="changes-close" aria-label="Hinweis schliessen">✕</button>';
+    el.hidden = false;
+    document.getElementById('changes-close').onclick = function () { el.hidden = true; };
+  }
+
+  // ---------- Lieblingsziele ----------
+  function renderFav() {
+    var el = document.getElementById('fav');
+    var past = hist.filter(function (h) { var t = parseDate(h.d); return t && t <= new Date(); });
+    var base = past.length ? past : hist;
+    if (!base.length) { el.innerHTML = '<p class="empty">Noch keine Flüge gespeichert.</p>'; return; }
+    var count = {}, countries = {}, mins = 0, dist = 0;
+    base.forEach(function (h) {
+      if (h.b !== HOME) count[h.b] = (count[h.b] || 0) + 1;
+      if (CC[h.b]) countries[CC[h.b]] = 1; if (CC[h.a]) countries[CC[h.a]] = 1;
+      mins += h.m || 0; dist += km(h.a, h.b);
+    });
+    var top = Object.keys(count).sort(function (a, b) { return count[b] - count[a] || city(a).localeCompare(city(b)); }).slice(0, 6);
+    var max = top.length ? count[top[0]] : 1;
+    var since = new Intl.DateTimeFormat('de-CH', { month: 'long', year: 'numeric', timeZone: TZ }).format(parseDate(base[0].d));
+    document.getElementById('fav-since').textContent = 'Seit ' + since;
+    el.innerHTML = '<div class="fav-sum">' +
+      '<span><b>' + base.length + '</b> Flüge</span><span><b>' + Object.keys(count).length + '</b> Städte</span>' +
+      '<span><b>' + Object.keys(countries).length + '</b> Länder</span><span><b>' + fmtNum.format(Math.round(mins / 60)) + '</b> Std in der Luft</span>' +
+      '<span><b>' + fmtNum.format(Math.round(dist / 100) * 100) + '</b> km</span></div>' +
+      '<ol class="fav-list">' + top.map(function (c, i) {
+        return '<li><span class="rk">' + (i + 1) + '</span><span class="fc">' + flag(c) + esc(city(c)) + '</span>' +
+          '<span class="bar"><i style="width:' + Math.max(6, count[c] / max * 100).toFixed(0) + '%"></i></span><span class="cnt mono">' + count[c] + '×</span></li>';
+      }).join('') + '</ol>';
+  }
+
+  // ---------- "In meinen Kalender" (.ics-Datei der kommenden Flüge) ----------
+  function icsEsc(s) { return String(s).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1'); }
+  function icsDate(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+  document.getElementById('ics-export').addEventListener('click', function () {
+    var now = new Date(), msg = document.getElementById('ics-msg');
+    var up = flights.filter(function (f) { return f.end > now; });
+    if (!up.length) { msg.textContent = 'Keine kommenden Flüge im Plan.'; return; }
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Joels Dienstplan//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Joels Flüge'];
+    up.forEach(function (f) {
+      lines.push('BEGIN:VEVENT', 'UID:' + f.fno + '-' + icsDate(f.start) + '@joels-dienstplan', 'DTSTAMP:' + icsDate(now),
+        'DTSTART:' + icsDate(f.start), 'DTEND:' + icsDate(f.end),
+        'SUMMARY:' + icsEsc('✈️ Joel: ' + f.fno + ' ' + city(f.from) + ' → ' + city(f.to)),
+        'LOCATION:' + icsEsc(city(f.from) + ' (' + f.from + ')'),
+        'DESCRIPTION:' + icsEsc('Abflug ' + f.dep + ' Ortszeit ' + city(f.from) + '\nAnkunft ' + f.arr + f.arrPlus + ' Ortszeit ' + city(f.to) +
+          '\nLive verfolgen: https://www.flightradar24.com/data/flights/' + f.fno.toLowerCase()),
+        'END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    lines = lines.map(function (l) { var out = []; while (l.length > 60) { out.push(l.slice(0, 60)); l = ' ' + l.slice(60); } out.push(l); return out.join('\r\n'); });
+    var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'Joels-Fluege.ics'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    msg.textContent = up.length + ' Flüge exportiert. Öffne die Datei, um sie in deinen Kalender zu übernehmen. Bei Planänderungen einfach neu herunterladen.';
+  });
   function renderList() {
     var now = new Date(), todayKey = dayKey(now);
     var up = '', past = '', pastCount = 0;
@@ -936,8 +1148,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   dlg.addEventListener('click', function (ev) { if (ev.target === dlg && dlg.close) dlg.close(); });
 
   var LAYOUT_KEY = 'dienstplan-layout';
-  var SEC_NAMES = { status: 'Wo ist Joel?', cal: 'Kalender', stats: 'In Zahlen', map: 'Routen-Karte', list: 'Kommende Dienste' };
-  var DEFAULT_ORDER = ['status', 'cal', 'stats', 'map', 'list'];
+  var SEC_NAMES = { status: 'Wo ist Joel?', cal: 'Kalender', stats: 'In Zahlen', fav: 'Lieblingsziele', map: 'Routen-Karte', list: 'Kommende Dienste' };
+  var DEFAULT_ORDER = ['status', 'cal', 'stats', 'fav', 'map', 'list'];
   var layout = { order: DEFAULT_ORDER.slice(), off: [] };
   try {
     var ls = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null');
@@ -1142,7 +1354,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   document.getElementById('foot').textContent = data.stamp ? 'Dienstplan zuletzt abgerufen am ' + fmtStamp.format(data.stamp) + '. Wird regelmässig aktualisiert; ganz kurzfristige Änderungen können fehlen.' : '';
 
   if (events.length) renderCal();
-  renderStatus(); renderStats(); renderList(); renderMap();
+  renderStatus(); renderStats(); renderFav(); renderChanges(); renderList(); renderMap();
   var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderMap, 200); });
   setInterval(function () { renderStatus(); renderMap(); }, 60000);
 })();
