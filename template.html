@@ -408,7 +408,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     <div class="legend">
       <span><i style="background:var(--gold-soft);border:1px solid var(--gold)"></i>Flug</span>
       <span><i style="background:repeating-linear-gradient(135deg,var(--gold-soft) 0 3px,transparent 3px 7px);border:1px solid var(--line)"></i>Unterwegs</span>
-      <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Standby/Reserve</span>
+      <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Bereitschaft/Reserve</span>
       <span><i style="background:var(--sick-soft);border:1px solid var(--sick)"></i>Krank</span>
     </div>
     <div class="cal-foot">
@@ -531,7 +531,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 <script>
 (function () {
   var TZ = 'Europe/Zurich';
-  var HOME = 'ZRH';
+  var HOME = 'ZRH';            // Basis-Flughafen (für Flüge, Karte, Statistik)
+  var HOME_TOWN = 'St. Gallen'; // Wohnort, wird im Status angezeigt
   // IATA: [Stadt, Längengrad, Breitengrad]
   var AP = {
     ZRH: ['Zürich', 8.55, 47.46], GVA: ['Genf', 6.11, 46.24], BSL: ['Basel', 7.53, 47.6],
@@ -630,7 +631,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     }
     var s = (e.summary || '').toUpperCase();
     if (/^KRANK/.test(s)) { e.kind = 'sick'; e.label = 'Krank'; }
-    else if (/^SBY/.test(s)) { e.kind = 'duty'; e.label = 'Standby'; e.hint = 'Auf Abruf zu Hause oder am Flughafen'; }
+    else if (/^SBY/.test(s)) { e.kind = 'duty'; e.label = 'Abrufbereitschaft'; e.hint = 'Joel ist auf Abruf und kann kurzfristig für einen Flug aufgeboten werden'; }
     else if (/^RES/.test(s)) { e.kind = 'duty'; e.label = 'Reserve'; e.hint = 'Kann kurzfristig für einen Flug eingeteilt werden'; }
     else if (/^(OFF|FREI|FRE|DO|ROF)/.test(s)) { e.kind = 'off'; e.label = 'Frei'; }
     else if (/^(URL|VAC|FER)/.test(s)) { e.kind = 'off'; e.label = 'Ferien'; }
@@ -812,16 +813,26 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       if (duty && duty.kind === 'sick') html += '<span class="pill sick"><span class="dot"></span>Heute krank</span><div class="status-title">Joel ist heute krankgeschrieben</div>';
       else if (duty && duty.kind === 'duty') html += '<span class="pill duty"><span class="dot"></span>' + esc(duty.label) + '</span><div class="status-title">Heute ' + esc(duty.label) + ' bis ' + fmtTime.format(duty.end) + '</div><p class="status-sub">' + esc(duty.hint || '') + '</p>';
       else if (stay) html += '<span class="pill ground"><span class="dot"></span>Aufenthalt</span><div class="status-title">' + flag(last.to) + 'In ' + esc(city(last.to)) + '</div><p class="status-sub">Gelandet ' + fmtShort.format(last.end) + ', Rückflug in ' + until(last.stayUntil - now) + '</p>';
-      else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(city(HOME)) + '</div>';
+      else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(HOME_TOWN) + '</div>';
       if (stay && crewText(crewOf(nextF))) html += '<p class="status-sub crew-tag">🔒 ' + esc(crewText(crewOf(nextF))) + '</p>';
+      // Nächster Einsatz: Flug oder Bereitschaft (Standby/Reserve), je nachdem, was zuerst kommt
+      var nextDuty = events.filter(function (e) { return e.kind === 'duty' && e.start > now; })[0];
+      var dutyFirst = nextDuty && (!nextF || nextDuty.start < effDep(nextF));
       if (stay) { place = last.to; placeLabel = 'Joel ist hier'; }
-      else if (nextF) { place = nextF.to === HOME ? nextF.from : nextF.to; placeLabel = 'Nächstes Ziel'; }
-      if (nextF) {
-        html += '<div class="next"><span class="eyebrow">Nächster Flug</span><b class="mono">' + esc(nextF.fno) + '</b><span>' +
+      else if (nextF && !dutyFirst) { place = nextF.to === HOME ? nextF.from : nextF.to; placeLabel = 'Nächstes Ziel'; }
+      if (dutyFirst) {
+        var allDayDuty = nextDuty.end - nextDuty.start >= 864e5 - 60000;
+        html += '<div class="next"><span class="eyebrow">Nächster Einsatz</span><b>' + esc(nextDuty.label) + '</b><span>' + fmtShort.format(nextDuty.start) +
+          (allDayDuty ? ', ganzer Tag' : ', ' + fmtTime.format(nextDuty.start) + '–' + fmtTime.format(nextDuty.end) + ' Uhr') + '</span></div>' +
+          (nextDuty.hint ? '<p class="status-sub">' + esc(nextDuty.hint) + '</p>' : '') +
+          countdown(nextDuty.start, 'Beginnt in') +
+          (nextF ? '<p class="status-sub">Nächster geplanter Flug: <b class="mono">' + esc(nextF.fno) + '</b> nach ' + flag(nextF.to) + esc(city(nextF.to)) + ', ' + fmtShort.format(nextF.start) + ', ' + nextF.dep + '</p>' : '');
+      } else if (nextF) {
+        html += '<div class="next"><span class="eyebrow">Nächster Einsatz · Flug</span><b class="mono">' + esc(nextF.fno) + '</b><span>' +
           esc(city(nextF.from)) + ' → ' + flag(nextF.to) + esc(city(nextF.to)) + '</span><span>' + fmtShort.format(nextF.start) + ', ' + nextF.dep +
           '</span>' + statusChip(nextF) + '</div>' + routeBlock(nextF, -1) + liveNote(nextF) + countdown(effDep(nextF), 'Abflug in') + trackLinks(nextF, false);
       } else {
-        html += '<p class="status-sub">Keine weiteren Flüge im Plan.</p>';
+        html += '<p class="status-sub">Keine weiteren Einsätze im Plan.</p>';
       }
     }
     if (place && place !== HOME && AP[place]) html += '<div class="local" data-ap="' + place + '" data-label="' + esc(placeLabel) + '"></div>';
@@ -1151,7 +1162,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       var fl = evs.filter(function (e) { return e.kind === 'flight'; });
       if (fl.length) { cls += ' flight'; tag = fl[fl.length - 1].to === HOME ? fl[0].to : fl[fl.length - 1].to; if (tag === HOME) tag = fl[0].from; label += ' Flug ' + fl.map(function (f) { return f.fno; }).join(', '); }
       else if (evs.some(function (e) { return e.kind === 'sick'; })) { cls += ' sick'; tag = 'KR'; label += ' krank'; }
-      else if (evs.some(function (e) { return e.kind === 'duty'; })) { cls += ' duty'; tag = evs[0].label === 'Standby' ? 'SBY' : 'RES'; label += ' ' + evs[0].label; }
+      else if (evs.some(function (e) { return e.kind === 'duty'; })) { cls += ' duty'; tag = evs[0].label === 'Abrufbereitschaft' ? 'SBY' : 'RES'; label += ' ' + evs[0].label; }
       if (awayDays[k]) { cls += ' away'; if (!tag) tag = awayDays[k]; label += ' in ' + city(awayDays[k]); }
       if (evs.length || awayDays[k]) cls += ' has';
       if (k === todayKey) cls += ' today';
@@ -1369,7 +1380,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     }
     // Legende
     var fy = top + rows * cellH + (rows - 1) * gap + 52, lx = pad;
-    [['Flug', '--gold-soft', '--gold'], ['Unterwegs', '--surface', '--line'], ['Standby / Reserve', '--duty-soft', '--duty'], ['Krank', '--sick-soft', '--sick']].forEach(function (L) {
+    [['Flug', '--gold-soft', '--gold'], ['Unterwegs', '--surface', '--line'], ['Bereitschaft / Reserve', '--duty-soft', '--duty'], ['Krank', '--sick-soft', '--sick']].forEach(function (L) {
       rr(ctx, lx, fy - 14, 18, 18, 4); ctx.fillStyle = c(L[1]); ctx.fill(); ctx.strokeStyle = c(L[2]); ctx.lineWidth = 1.2; ctx.stroke();
       ctx.font = '600 15px Manrope, sans-serif'; ctx.fillStyle = c('--muted'); ctx.fillText(L[0], lx + 28, fy);
       lx += 28 + ctx.measureText(L[0]).width + 30;
