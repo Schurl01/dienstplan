@@ -84,6 +84,19 @@ $nowIso = [datetime]::UtcNow.ToString("yyyyMMdd'T'HHmmss'Z'", [Globalization.Cul
 $byKey = [ordered]@{}
 # Vergangene Fluege aus der Historie behalten; kuenftige kommen nur aus dem aktuellen Plan (Streichungen fallen weg)
 foreach ($h in $history) { if ($h.d -and [string]::CompareOrdinal([string]$h.d, $nowIso) -lt 0) { $byKey["$($h.f)|$($h.d)"] = $h } }
+# Einmaliger Import alter Fluege (z. B. aus den Roster-PDFs), private Repository-Variable HISTORY_IMPORT
+if ($env:HISTORY_IMPORT) {
+  try {
+    $imp = @($env:HISTORY_IMPORT | ConvertFrom-Json)
+    $added = 0
+    foreach ($h in $imp) {
+      if ($h.d -and $h.f -and [string]::CompareOrdinal([string]$h.d, $nowIso) -lt 0 -and -not $byKey.Contains("$($h.f)|$($h.d)")) {
+        $byKey["$($h.f)|$($h.d)"] = [pscustomobject]@{ d = [string]$h.d; f = [string]$h.f; a = [string]$h.a; b = [string]$h.b; m = [int]$h.m }; $added++
+      }
+    }
+    Write-Output "Import: $added alte Fluege uebernommen"
+  } catch { Write-Warning "HISTORY_IMPORT nicht lesbar: $($_.Exception.Message)" }
+}
 foreach ($c in $current) { $byKey["$($c.f)|$($c.d)"] = $c }
 $merged = @($byKey.Values | Sort-Object { $_.d })
 $histJson = if ($merged.Count) { ConvertTo-Json -InputObject $merged -Compress -Depth 3 } else { '[]' }
