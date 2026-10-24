@@ -319,6 +319,12 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 .ch-hint { color: var(--muted); font-size: 12px; }
 .iconbtn.sm { width: 28px; height: 28px; font-size: 12px; }
 .chip.new { background: var(--gold); color: var(--on-gold); }
+.chip.late { background: rgba(255, 140, 40, 0.18); color: #ff9a3c; }
+:root[data-theme="light"] .chip.late { color: #b3570a; }
+.live-note { margin: 0; font-size: 13px; font-weight: 600; }
+.live-stamp { margin: 0; font-size: 11px; color: var(--muted); }
+.route .time s, .dd-row s { color: var(--muted); font-weight: 400; }
+.route .time .new { color: #ff9a3c; }
 /* Lieblingsziele */
 .fav { padding: 18px 20px; display: grid; gap: 16px; }
 .fav-sum { display: flex; flex-wrap: wrap; gap: 6px 22px; color: var(--muted); font-size: 13px; }
@@ -787,17 +793,17 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   function renderStatus() {
     var now = new Date(), el = document.getElementById('status');
     if (!events.length) { el.innerHTML = '<p class="empty">Der Dienstplan konnte nicht geladen werden.</p>'; return; }
-    var live = flights.filter(function (f) { return f.start <= now && now < f.end; })[0];
-    var nextF = flights.filter(function (f) { return f.start > now; })[0];
+    var live = flights.filter(isAirborne)[0];
+    var nextF = flights.filter(function (f) { return effDep(f) > now && !isCanceled(f); })[0];
     var duty = events.filter(function (e) { return e.kind !== 'flight' && e.start <= now && now < e.end; })[0];
-    var last = flights.filter(function (f) { return f.end <= now; }).pop();
+    var last = flights.filter(function (f) { return effArr(f) <= now; }).pop();
     var html = '', place = null, placeLabel = '';
     if (live) {
-      var p = Math.min(1, Math.max(0, (now - live.start) / (live.end - live.start)));
-      html += '<span class="pill live"><span class="dot"></span>In der Luft</span>' +
+      var p = Math.min(1, Math.max(0, (now - effDep(live)) / (effArr(live) - effDep(live))));
+      html += '<span class="pill live"><span class="dot"></span>In der Luft</span>' + statusChip(live) +
         '<div class="status-title">' + esc(live.fno) + ' von ' + esc(city(live.from)) + ' nach ' + esc(city(live.to)) + '</div>' +
-        routeBlock(live, p) +
-        countdown(live.end, 'Landung in') +
+        routeBlock(live, p) + liveNote(live) +
+        countdown(effArr(live), 'Landung in') +
         '<p class="status-sub">' + esc(AIRCRAFT[live.ac] || live.ac) + '</p>' +
         trackLinks(live, true);
       place = live.to; placeLabel = 'Am Ziel';
@@ -813,14 +819,72 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       if (nextF) {
         html += '<div class="next"><span class="eyebrow">Nächster Flug</span><b class="mono">' + esc(nextF.fno) + '</b><span>' +
           esc(city(nextF.from)) + ' → ' + flag(nextF.to) + esc(city(nextF.to)) + '</span><span>' + fmtShort.format(nextF.start) + ', ' + nextF.dep +
-          '</span></div>' + routeBlock(nextF, -1) + countdown(nextF.start, 'Abflug in') + trackLinks(nextF, false);
+          '</span>' + statusChip(nextF) + '</div>' + routeBlock(nextF, -1) + liveNote(nextF) + countdown(effDep(nextF), 'Abflug in') + trackLinks(nextF, false);
       } else {
         html += '<p class="status-sub">Keine weiteren Flüge im Plan.</p>';
       }
     }
     if (place && place !== HOME && AP[place]) html += '<div class="local" data-ap="' + place + '" data-label="' + esc(placeLabel) + '"></div>';
+    if (statusAt) html += '<p class="live-stamp">Live-Flugstatus · Stand ' + fmtTime.format(new Date(statusAt)) + ' Uhr</p>';
     el.innerHTML = html;
     tick(); fillLocal();
+  }
+
+  // ---------- Live-Flugstatus (Verspätungen) aus status.enc ----------
+  var liveStatus = {}, statusAt = 0, statusSalt = null;
+  var STATUS_TXT = { Expected: 'Geplant', CheckIn: 'Check-in', Boarding: 'Boarding', GateClosed: 'Gate geschlossen', Departed: 'Abgeflogen',
+    EnRoute: 'In der Luft', Approaching: 'Im Anflug', Delayed: 'Verspätet', Landed: 'Gelandet', Arrived: 'Angekommen',
+    Canceled: 'Annulliert', CanceledUncertain: 'Evtl. annulliert', Diverted: 'Umgeleitet', Unknown: 'Unbekannt' };
+  function sKey(f) { return f.fno + '|' + f.start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+  function stOf(f) { return f && f.kind === 'flight' ? liveStatus[sKey(f)] || null : null; }
+  function effDep(f) { var s = stOf(f); return new Date((s && (s.dAct || s.dRev)) || f.start.getTime()); }
+  function effArr(f) { var s = stOf(f); return new Date((s && (s.aAct || s.aRev)) || f.end.getTime()); }
+  function isCanceled(f) { var s = stOf(f); return !!(s && /cancel/i.test(s.st || '')); }
+  function isAirborne(f) { var now = new Date(); return !isCanceled(f) && effDep(f) <= now && now < effArr(f); }
+  function delayMin(f) { var s = stOf(f); return s && s.dRev ? Math.round((s.dRev - f.start) / 60000) : 0; }
+  function statusChip(f) {
+    var s = stOf(f); if (!s) return '';
+    if (isCanceled(f)) return '<span class="chip sick">Annulliert</span>';
+    if (/divert/i.test(s.st || '')) return '<span class="chip sick">Umgeleitet</span>';
+    if (/arrived|landed/i.test(s.st || '')) return '';
+    var d = delayMin(f);
+    if (d >= 5) return '<span class="chip late">+' + d + ' Min</span>';
+    return '<span class="chip live">Pünktlich</span>';
+  }
+  function liveNote(f) {
+    var s = stOf(f); if (!s || isCanceled(f)) return '';
+    var parts = [], d = delayMin(f);
+    if (d >= 5 && s.dLoc) parts.push('Neuer Abflug ' + s.dLoc + ' statt ' + f.dep);
+    if (s.aLoc && s.aLoc !== f.arr && (d >= 5 || s.aAct)) parts.push((s.aAct ? 'Gelandet ' : 'Neue Ankunft ') + s.aLoc);
+    if (s.dGate) parts.push('Gate ' + s.dGate + (s.dTerm ? ' (Terminal ' + s.dTerm + ')' : ''));
+    return parts.length ? '<p class="live-note">' + (d >= 5 ? '🟠 ' : '🟢 ') + esc(parts.join(' · ')) + '</p>' : '';
+  }
+  function b64u(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+  function loadStatus(force) {
+    var pw = null; try { pw = localStorage.getItem('dienstplan-pw'); } catch (e) {}
+    if (!pw || !/\.github\.io$/.test(location.hostname) || !window.crypto || !crypto.subtle) return;
+    // nur abfragen, wenn ein Flug in der Nähe ist (3 Std vorher bis 2 Std nachher)
+    var now = Date.now();
+    if (!force && !flights.some(function (f) { return now > f.start - 3 * 36e5 && now < f.end + 2 * 36e5; })) return;
+    fetch(ghApi + '/contents/status.enc', { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.content) return null;
+        var o = JSON.parse(atob(j.content.replace(/\s/g, '')));
+        if (o.salt === statusSalt) return null;
+        statusSalt = o.salt;
+        return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+          return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64u(o.salt), iterations: 600000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        }).then(function (key) {
+          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64u(o.iv) }, key, b64u(o.data));
+        }).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+      })
+      .then(function (st) {
+        if (!st || !st.flights) return;
+        liveStatus = st.flights; statusAt = st.updated || 0;
+        renderStatus(); renderList(); renderMap();
+      })
+      .catch(function () {});
   }
 
   // ---------- Countdown (tickt jede Sekunde) ----------
@@ -874,10 +938,13 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       '<span class="lw"><span class="wi">' + x.i + '</span>' + w.temp + '° · ' + esc(x.t) + '</span>';
   }
   function routeBlock(f, p) {
+    var s = stOf(f), late = delayMin(f) >= 5;
+    var dep = late && s.dLoc ? '<s>' + f.dep + '</s> <b class="new">' + s.dLoc + '</b>' : f.dep;
+    var arr = late && s.aLoc ? '<s>' + f.arr + '</s> <b class="new">' + s.aLoc + '</b>' : f.arr + (f.arrPlus ? ' <small>' + f.arrPlus + '</small>' : '');
     var bar = p < 0 ? '<div class="track idle"></div>' :
       '<div class="track"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div><span class="plane" style="left:' + (p * 100).toFixed(1) + '%">' + PLANE + '</span></div>';
-    return '<div class="route"><div class="end"><span class="code">' + esc(f.from) + '</span><span class="city">' + esc(city(f.from)) + '</span><span class="time">' + f.dep + '</span></div>' +
-      bar + '<div class="end r"><span class="code">' + esc(f.to) + '</span><span class="city">' + esc(city(f.to)) + '</span><span class="time">' + f.arr + (f.arrPlus ? ' <small>' + f.arrPlus + '</small>' : '') + '</span></div></div>';
+    return '<div class="route"><div class="end"><span class="code">' + esc(f.from) + '</span><span class="city">' + esc(city(f.from)) + '</span><span class="time">' + dep + '</span></div>' +
+      bar + '<div class="end r"><span class="code">' + esc(f.to) + '</span><span class="city">' + esc(city(f.to)) + '</span><span class="time">' + arr + '</span></div></div>';
   }
 
   // ---------- Statistik ----------
@@ -937,9 +1004,9 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       var right = p[0] < W - 50;
       svg.append('text').attr('class', 'lbl').attr('x', p[0] + (right ? 8 : -8)).attr('y', p[1] - 6).attr('text-anchor', right ? 'start' : 'end').text(c);
     });
-    var live = flights.filter(function (f) { return f.start <= now && now < f.end; })[0];
+    var live = flights.filter(isAirborne)[0];
     if (live && AP[live.from] && AP[live.to]) {
-      var t = (now - live.start) / (live.end - live.start);
+      var t = (now - effDep(live)) / (effArr(live) - effDep(live));
       var interp = d3.geoInterpolate(AP[live.from].slice(1), AP[live.to].slice(1));
       var p0 = proj(interp(Math.max(0, t - 0.01))), p1 = proj(interp(Math.min(1, t + 0.01))), pc = proj(interp(t));
       var ang = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) * 180 / Math.PI;
@@ -955,12 +1022,13 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   }
   function itemHTML(e, now) {
     if (e.kind === 'flight') {
-      var state = (e.end <= now ? '<span class="chip done">Gelandet</span>' : (e.start <= now ? '<span class="chip live">In der Luft</span>' : '')) + changeChip(e);
+      var state = (isCanceled(e) ? '' : effArr(e) <= now ? '<span class="chip done">Gelandet</span>' : (isAirborne(e) ? '<span class="chip live">In der Luft</span>' : '')) +
+        (effArr(e) > now ? statusChip(e) : '') + changeChip(e);
       var stay = e.stayUntil ? '<div class="stay">Aufenthalt in ' + esc(city(e.to)) + ' bis ' + fmtShort.format(e.stayUntil) + '</div>' : '';
-      return '<div class="item panel' + (e.start <= now && now < e.end ? ' is-live' : '') + '">' +
+      return '<div class="item panel' + (isAirborne(e) ? ' is-live' : '') + '">' +
         '<div class="irow"><span class="fno">' + esc(e.fno) + '</span>' +
         '<span class="legs"><span class="t">' + e.dep + '</span><span class="c">' + flag(e.from) + esc(city(e.from)) + '</span><span class="arrow">→</span>' +
-        '<span class="t">' + e.arr + (e.arrPlus ? '<sup>' + e.arrPlus + '</sup>' : '') + '</span><span class="c">' + flag(e.to) + esc(city(e.to)) + '</span></span>' + state + '</div>' +
+        '<span class="t">' + e.arr + (e.arrPlus ? '<sup>' + e.arrPlus + '</sup>' : '') + '</span><span class="c">' + flag(e.to) + esc(city(e.to)) + '</span></span>' + state + '</div>' + (effArr(e) > now ? liveNote(e) : '') +
         '<div class="meta"><span class="mono">' + esc(e.from) + '–' + esc(e.to) + '</span><span>Flugzeit ' + dur(e.end - e.start) + '</span>' +
         (km(e.from, e.to) ? '<span>' + fmtNum.format(Math.round(km(e.from, e.to))) + ' km</span>' : '') +
         (e.ac ? '<span>' + esc(AIRCRAFT[e.ac] || e.ac) + '</span>' : '') + (e.report ? '<span>Dienstbeginn ' + e.report + '</span>' : '') +
@@ -1142,14 +1210,19 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     document.getElementById('day-rel').textContent = relDay(k, dayKey(now));
     evs.forEach(function (e) {
       if (e.kind === 'flight') {
-        var st = e.end <= now ? '<span class="chip done">Gelandet</span>' : e.start <= now ? '<span class="chip live">In der Luft</span>' : '';
-        var p = e.start <= now && now < e.end ? (now - e.start) / (e.end - e.start) : (e.end <= now ? 1 : -1);
+        var sx = stOf(e), late = delayMin(e) >= 5;
+        var st = isCanceled(e) ? '' : effArr(e) <= now ? '<span class="chip done">Gelandet</span>' : isAirborne(e) ? '<span class="chip live">In der Luft</span>' : '';
+        var p = isAirborne(e) ? (now - effDep(e)) / (effArr(e) - effDep(e)) : (effArr(e) <= now ? 1 : -1);
         html += '<article class="dd-card">' +
-          '<div class="dd-head"><span class="fno">' + esc(e.fno) + '</span>' + st + changeChip(e) + '</div>' +
+          '<div class="dd-head"><span class="fno">' + esc(e.fno) + '</span>' + st + (effArr(e) > now ? statusChip(e) : '') + changeChip(e) + '</div>' +
           routeBlock(e, p) +
           '<div class="dd-grid">' +
-          row('Abflug', e.dep + ' Ortszeit ' + esc(city(e.from))) +
-          row('Ankunft', e.arr + (e.arrPlus ? ' (' + e.arrPlus + ' Tag)' : '') + ' Ortszeit ' + esc(city(e.to))) +
+          (sx ? row('Live-Status', esc(STATUS_TXT[sx.st] || sx.st || '–') + (late ? ' · +' + delayMin(e) + ' Min' : '')) : '') +
+          row('Abflug', (late && sx.dLoc ? '<s>' + e.dep + '</s> ' + sx.dLoc : e.dep) + ' Ortszeit ' + esc(city(e.from))) +
+          row('Ankunft', (sx && sx.aLoc && (late || sx.aAct) ? '<s>' + e.arr + '</s> ' + sx.aLoc : e.arr + (e.arrPlus ? ' (' + e.arrPlus + ' Tag)' : '')) + ' Ortszeit ' + esc(city(e.to))) +
+          (sx && sx.dGate ? row('Gate Abflug', esc(sx.dGate) + (sx.dTerm ? ' · Terminal ' + esc(sx.dTerm) : '')) : '') +
+          (sx && sx.aGate ? row('Gate Ankunft', esc(sx.aGate) + (sx.aTerm ? ' · Terminal ' + esc(sx.aTerm) : '')) : '') +
+          (sx && sx.belt ? row('Gepäckband', esc(sx.belt)) : '') +
           (e.report ? row('Dienstbeginn', e.report + ' Uhr') : '') +
           row('Flugzeit', dur(e.end - e.start)) +
           (km(e.from, e.to) ? row('Distanz', fmtNum.format(Math.round(km(e.from, e.to))) + ' km') : '') +
@@ -1159,7 +1232,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
           (e.stayUntil ? '<p class="dd-stay">' + flag(e.to) + 'Danach Aufenthalt in ' + esc(city(e.to)) + ' bis ' + fmtShort.format(e.stayUntil) + '</p>' : '') +
           (isJoel && e.from !== HOME && e.end > now ? crewForm(e) : '') +
           (e.end > now && e.to !== HOME ? '<div class="local" data-ap="' + e.to + '" data-label="Jetzt am Ziel"></div>' : '') +
-          trackLinks(e, e.start <= now && now < e.end) +
+          trackLinks(e, isAirborne(e)) +
           '</article>';
       } else {
         var allDay = e.end - e.start >= 864e5 - 60000;
@@ -1916,6 +1989,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   renderStatus(); renderStats(); renderFav(); renderChanges(); renderList(); renderMap();
   if (curTheme === 'retro') flap();
   loadCrew();
+  loadStatus(true);
+  setInterval(function () { loadStatus(false); }, 3 * 60000);
   var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderMap, 200); });
   setInterval(function () { renderStatus(); renderMap(); }, 60000);
 })();
