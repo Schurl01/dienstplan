@@ -30,6 +30,7 @@ jobs:
         env:
           ICS_URL: ${{ secrets.ICS_URL }}
           PAGE_PASSWORD: ${{ secrets.PAGE_PASSWORD }}
+          MESSAGE_TOKEN: ${{ secrets.MESSAGE_TOKEN }}
         run: ./build-github.ps1
 
       - name: App-Icon erzeugen
