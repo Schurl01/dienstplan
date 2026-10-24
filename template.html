@@ -784,6 +784,39 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   var events = data.events;
   var flights = events.filter(function (e) { return e.kind === 'flight'; });
 
+  // ---------- Alte Flüge aus der Flug-Historie in Kalender & Liste übernehmen ----------
+  // Die Historie enthält nur Abflug (UTC), Flugnummer, Strecke und Dauer; Ortszeiten werden über die Zeitzone des Flughafens berechnet.
+  var AP_TZ = {};
+  [['Europe/Zurich', 'ZRH GVA BSL BER HAM FRA MUC DUS CGN PMO CTA NAP FCO BRI OLB CAG SUF AMS BRU CDG NCE VIE PRG WAW BUD ARN CPH OSL MAD BCN AGP PMI VLC ALC IBZ PRN SKP BEG TIA'],
+   ['Europe/London', 'LHR LCY LGW MAN DUB LIS OPO FAO'], ['Europe/Athens', 'ATH HER SKG HEL'], ['Europe/Istanbul', 'IST'], ['Asia/Jerusalem', 'TLV'],
+   ['Asia/Dubai', 'DXB'], ['America/New_York', 'BOS JFK EWR MIA IAD'], ['America/Toronto', 'YUL'], ['America/Chicago', 'ORD'], ['America/Los_Angeles', 'SFO LAX'],
+   ['Asia/Bangkok', 'BKK'], ['Asia/Singapore', 'SIN'], ['Asia/Hong_Kong', 'HKG'], ['Asia/Shanghai', 'PEK PVG'], ['Asia/Tokyo', 'NRT'], ['Asia/Seoul', 'ICN'],
+   ['Asia/Kolkata', 'BOM DEL'], ['Africa/Johannesburg', 'JNB'], ['America/Sao_Paulo', 'GRU'], ['Indian/Mauritius', 'MRU'], ['Indian/Maldives', 'MLE'], ['Asia/Colombo', 'CMB']
+  ].forEach(function (g) { g[1].split(' ').forEach(function (c) { AP_TZ[c] = g[0]; }); });
+  (function () {
+    var list = [];
+    try { list = JSON.parse(document.getElementById('history').textContent); } catch (e) { return; }
+    if (!Array.isArray(list)) return;
+    function compact(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+    function hm(d, tz) { return new Intl.DateTimeFormat('de-CH', { timeZone: tz, hour: '2-digit', minute: '2-digit' }).format(d); }
+    function ymd(d, tz) { return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(d); }
+    var have = {}, now = new Date(), added = 0;
+    flights.forEach(function (f) { have[f.fno + '|' + compact(f.start)] = 1; });
+    list.forEach(function (h) {
+      var s = parseDate(h.d); if (!s || !h.f || have[h.f + '|' + h.d]) return;
+      var e = new Date(s.getTime() + (h.m || 0) * 60000);
+      if (e > now) return; // nur vergangene Flüge; Künftiges kommt aus dem aktuellen Plan
+      var tzA = AP_TZ[h.a] || TZ, tzB = AP_TZ[h.b] || TZ;
+      var ev = { kind: 'flight', start: s, end: e, summary: h.f, airline: h.f.slice(0, 2), num: h.f.slice(2), fno: h.f, from: h.a, to: h.b,
+        dep: hm(s, tzA), arr: hm(e, tzB), arrPlus: ymd(e, tzB) > ymd(s, tzA) ? '+1' : '', ac: '', report: '', imported: true };
+      events.push(ev); flights.push(ev); added++;
+    });
+    if (added) {
+      events.sort(function (a, b) { return a.start - b.start; });
+      flights.sort(function (a, b) { return a.start - b.start; });
+    }
+  })();
+
   var awayDays = {};
   flights.forEach(function (f, i) {
     var nxt = flights[i + 1];
@@ -1078,10 +1111,10 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var all = sum(flights);
     document.getElementById('stat-month').textContent = 'Im ' + fmtMonth.format(now);
     var tiles = [
-      ['Flüge', month.n, '', all.n + ' im ganzen Plan'],
-      ['Flugstunden', month.h, 'Std', all.h + ' Std im ganzen Plan'],
+      ['Flüge', month.n, '', all.n + ' insgesamt'],
+      ['Flugstunden', month.h, 'Std', all.h + ' Std insgesamt'],
       ['Kilometer', fmtNum.format(month.km), 'km', fmtNum.format(all.km) + ' km · ' + (all.km / 40075).toFixed(1).replace('.', ',') + '× um die Erde'],
-      ['Städte', month.c, '', all.c + ' verschiedene im Plan']
+      ['Städte', month.c, '', all.c + ' verschiedene insgesamt']
     ];
     document.getElementById('stats').innerHTML = tiles.map(function (t) {
       return '<div class="stat panel"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + (t[2] ? '<small>' + t[2] + '</small>' : '') + '</span><span class="t">' + t[3] + '</span></div>';
