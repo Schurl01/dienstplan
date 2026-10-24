@@ -118,6 +118,59 @@
 #scare .got { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px; color: #f2e9e4; font-family: var(--font-display); font-size: clamp(36px, 9vw, 64px); opacity: 0; transition: opacity .5s ease; padding-inline: 16px; }
 #scare .got small { font-family: var(--font-body); font-size: 14px; color: #a99; }
 #scare .got.on { opacity: 1; }
+/* Freie Tage */
+.day.free { background: var(--live-soft); color: var(--live); border-color: transparent; }
+.day.free .tag { font-family: var(--font-body); font-size: 9px; letter-spacing: .04em; }
+/* Nachrichten */
+.hdr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hdr-actions:not(:has(:not([hidden]))) { display: none; }
+.msgform { display: grid; gap: 12px; }
+.msgform label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.msgform input, .msgform textarea { width: 100%; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; resize: vertical; }
+.msgform input:focus, .msgform textarea:focus { outline: none; border-color: var(--gold); }
+.msgform .bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.msgform .go { padding: 10px 20px; border-radius: 999px; border: 0; background: var(--gold); color: var(--on-gold); font: inherit; font-weight: 600; cursor: pointer; }
+.msgform .go:disabled { opacity: .6; }
+.msgs { padding: 14px 16px; display: grid; gap: 10px; border-color: var(--live); margin-top: 6px; }
+.msgs-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.msgs-head b { font-size: 15px; }
+.msg-list { display: grid; gap: 8px; }
+.msg-item { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.msg-item.unread { box-shadow: inset 3px 0 0 var(--live); }
+.msg-item .who { font-weight: 700; } .msg-item .when { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.msg-item p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Schlaf-Hinweis */
+.sleep { margin: 0; font-size: 13px; color: var(--muted); flex-basis: 100%; }
+/* Jahresrückblick-Banner */
+.wrapped-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; text-align: left; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--gold);
+  background: linear-gradient(110deg, var(--gold-soft), transparent); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; margin-top: 6px; }
+.wrapped-banner b { margin-left: auto; color: var(--gold); }
+/* Jahresrückblick (Stories) */
+.wrapped { position: fixed; inset: 0; z-index: 9000; color: #fff; display: grid; place-items: center; overflow: hidden; cursor: pointer; -webkit-user-select: none; user-select: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 40px) 24px calc(env(safe-area-inset-bottom, 0px) + 40px); transition: background .6s ease; }
+.wr-bars { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px; right: 64px; display: flex; gap: 4px; }
+.wr-bars i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+.wr-bars i b { display: block; height: 100%; width: 0; background: #fff; }
+.wr-bars i.done b { width: 100%; }
+.wr-bars i.now b { animation: wrfill 6s linear forwards; }
+@keyframes wrfill { to { width: 100%; } }
+.wr-close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 4px); right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.25); color: #fff; font-size: 18px; cursor: pointer; }
+.wr-slide { max-width: 520px; width: 100%; text-align: center; display: grid; gap: 14px; }
+.wr-slide .k { font-size: 13px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; opacity: .8; }
+.wr-slide .big { font-family: var(--font-display); font-size: clamp(56px, 18vw, 110px); line-height: 1; font-variant-numeric: tabular-nums; }
+.wr-slide .mid { font-family: var(--font-display); font-size: clamp(28px, 8vw, 46px); line-height: 1.1; text-wrap: balance; }
+.wr-slide p { margin: 0; font-size: 17px; line-height: 1.5; opacity: .92; text-wrap: balance; }
+.wr-slide .flags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.wr-slide .flags img { width: 40px; height: 30px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.wr-slide .rank { display: grid; gap: 8px; text-align: left; }
+.wr-slide .rank div { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.12); }
+.wr-slide .rank img { width: 28px; height: 21px; border-radius: 3px; object-fit: cover; }
+.wr-slide .rank span { margin-left: auto; opacity: .8; font-weight: 500; }
+.wr-slide > * { animation: wrin .6s cubic-bezier(.2,.8,.2,1) both; }
+.wr-slide > *:nth-child(2) { animation-delay: .12s; } .wr-slide > *:nth-child(3) { animation-delay: .24s; } .wr-slide > *:nth-child(4) { animation-delay: .36s; }
+@keyframes wrin { from { opacity: 0; transform: translateY(18px); } }
+.wr-hint { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); left: 0; right: 0; text-align: center; font-size: 12px; opacity: .6; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .wr-slide > * { animation: none; } .wr-bars i.now b { animation: none; width: 100%; } }
 /* Tagesfenster */
 .daydlg { width: min(520px, calc(100% - 24px)); }
 .daydlg h2 { font-size: 26px; text-transform: none; }
@@ -347,10 +400,17 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 .iconbtn { width: 38px; height: 38px; flex: none; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 15px; cursor: pointer; transition: border-color .2s, color .2s; }
 .iconbtn:hover { border-color: var(--gold); color: var(--gold); }
 .iconbtn:focus-visible, .order button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.settings { width: min(460px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; border: 1px solid var(--line); border-radius: 20px; padding: 22px; background: var(--bg); color: var(--ink); font-family: var(--font-body); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
+/* Abstand zur iPhone-Statusleiste und zum Home-Balken (wichtig als Web-App) */
+.settings { top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+  width: min(460px, calc(100% - 32px)); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 20px; padding: 22px; background: var(--bg); color: var(--ink); font-family: var(--font-body); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
 .settings[open] { display: grid; gap: 22px; }
 .settings::backdrop { background: rgba(5, 8, 15, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.set-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+/* Kopfzeile mit ✕ bleibt beim Scrollen oben sichtbar */
+.set-head { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 2; margin: 0 -22px; padding: 16px 22px 12px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.settings[open] { padding-top: 0; }
+.set-head .iconbtn { width: 44px; height: 44px; font-size: 17px; }
 .set-group { display: grid; gap: 10px; justify-items: start; }
 .settings .hint { margin: 0; font-size: 12px; color: var(--muted); }
 .order { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; }
@@ -392,6 +452,9 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     <h1><em>Joels</em> Dienstplan</h1>
     <p>Alle Flüge und Dienste mit Live-Verfolgung. Abflug- und Ankunftszeiten gelten jeweils in Ortszeit des Flughafens.</p>
     <div class="changes panel" id="changes" role="status" hidden></div>
+    <button type="button" class="wrapped-banner" id="wrapped-banner" hidden>🎁 <span id="wrapped-banner-text">Joels Jahr in der Luft ist da</span> <b>Ansehen →</b></button>
+    <div class="msgs panel" id="msgs" hidden></div>
+    <div class="hdr-actions"><button type="button" class="btn" id="msg-open" hidden>💬 Nachricht an Joel</button></div>
   </header>
 
   <div class="sections" id="sections">
@@ -410,6 +473,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       <span><i style="background:repeating-linear-gradient(135deg,var(--gold-soft) 0 3px,transparent 3px 7px);border:1px solid var(--line)"></i>Unterwegs</span>
       <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Bereitschaft/Reserve</span>
       <span><i style="background:var(--sick-soft);border:1px solid var(--sick)"></i>Krank</span>
+      <span><i style="background:var(--live-soft);border:1px solid var(--live)"></i>Frei</span>
     </div>
     <div class="cal-foot">
       <button type="button" class="btn" id="cal-export">
@@ -466,6 +530,30 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   <div class="dd-body" id="day-body"></div>
 </dialog>
 
+<dialog class="settings" id="msgdlg" aria-labelledby="msg-title">
+  <div class="set-head">
+    <h2 id="msg-title">Nachricht an Joel</h2>
+    <button type="button" class="iconbtn" id="msg-close" aria-label="Schliessen">✕</button>
+  </div>
+  <form class="msgform" id="msgform">
+    <label for="msg-name">Dein Name
+      <input type="text" id="msg-name" maxlength="40" autocomplete="given-name" required>
+    </label>
+    <label for="msg-text">Nachricht
+      <textarea id="msg-text" rows="4" maxlength="400" required placeholder="z. B. Guten Flug! Bring Schoggi mit 😄"></textarea>
+    </label>
+    <div class="bar"><button type="submit" class="go" id="msg-send">Senden</button><span class="cmsg" id="msg-status" role="status"></span></div>
+    <p class="hint">Die Nachricht wird verschlüsselt gespeichert. Nur Joel kann sie lesen.</p>
+  </form>
+</dialog>
+
+<div class="wrapped" id="wrapped" hidden>
+  <div class="wr-bars" id="wr-bars"></div>
+  <button type="button" class="wr-close" id="wr-close" aria-label="Jahresrückblick schliessen">✕</button>
+  <div class="wr-slide" id="wr-slide"></div>
+  <p class="wr-hint">Tippen für weiter</p>
+</div>
+
 <dialog class="settings" id="settings" aria-labelledby="set-title">
   <div class="set-head">
     <h2 id="set-title">Einstellungen</h2>
@@ -489,6 +577,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     <span class="eyebrow">Anmeldung</span>
     <p class="hint">Dieses Gerät merkt sich das Passwort. Beim Abmelden wird beim nächsten Öffnen wieder danach gefragt.</p>
     <button type="button" class="btn" id="logout">Auf diesem Gerät abmelden</button>
+  </div>
+
+  <div class="set-group">
+    <span class="eyebrow">Jahresrückblick</span>
+    <button type="button" class="btn" id="wrapped-open">🎁 Joels Jahr in der Luft ansehen</button>
   </div>
 
   <div class="set-group">
@@ -702,6 +795,12 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   var byDay = {};
   events.forEach(function (e) { var k = dayKey(e.start); (byDay[k] = byDay[k] || []).push(e); });
 
+  // Freie Tage: kein Dienst, nicht unterwegs, keine Ankunft, innerhalb des bekannten Plans und nicht in der Vergangenheit
+  var arrDays = {};
+  flights.forEach(function (f) { arrDays[dayKey(f.end)] = 1; });
+  var planEnd = events.reduce(function (m, e) { var k = dayKey(e.end); return k > m ? k : m; }, '');
+  function isFreeDay(k, todayKey) { return !byDay[k] && !awayDays[k] && !arrDays[k] && k >= todayKey && k <= planEnd; }
+
   // ---------- Neu / geändert seit dem letzten Besuch (pro Gerät) ----------
   var SEEN_KEY = 'dienstplan-seen', changes = {}, removed = [];
   function idOf(e) { return (e.kind === 'flight' ? e.fno : e.kind) + '|' + dayKey(e.start); }
@@ -813,7 +912,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       if (duty && duty.kind === 'sick') html += '<span class="pill sick"><span class="dot"></span>Heute krank</span><div class="status-title">Joel ist heute krankgeschrieben</div>';
       else if (duty && duty.kind === 'duty') html += '<span class="pill duty"><span class="dot"></span>' + esc(duty.label) + '</span><div class="status-title">Heute ' + esc(duty.label) + ' bis ' + fmtTime.format(duty.end) + '</div><p class="status-sub">' + esc(duty.hint || '') + '</p>';
       else if (stay) html += '<span class="pill ground"><span class="dot"></span>Aufenthalt</span><div class="status-title">' + flag(last.to) + 'In ' + esc(city(last.to)) + '</div><p class="status-sub">Gelandet ' + fmtShort.format(last.end) + ', Rückflug in ' + until(last.stayUntil - now) + '</p>';
-      else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(HOME_TOWN) + '</div>';
+      else html += '<span class="pill ground"><span class="dot"></span>Am Boden</span><div class="status-title">Zuhause in ' + esc(HOME_TOWN) + '</div>' + sleepNote(+fmtHour.format(now), fmtTime.format(now), HOME_TOWN);
       if (stay && crewText(crewOf(nextF))) html += '<p class="status-sub crew-tag">🔒 ' + esc(crewText(crewOf(nextF))) + '</p>';
       // Nächster Einsatz: Flug oder Bereitschaft (Standby/Reserve), je nachdem, was zuerst kommt
       var nextDuty = events.filter(function (e) { return e.kind === 'duty' && e.start > now; })[0];
@@ -942,11 +1041,19 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   }
   function paintLocal(el, code, w) {
     if (w.failed) return;
-    var x = wmo(w.code, w.day);
+    var x = wmo(w.code, w.day), lt = localTime(w.offset);
     el.innerHTML = '<span class="eyebrow">' + esc(el.getAttribute('data-label')) + '</span>' +
       '<span class="lc">' + flag(code) + esc(city(code)) + '</span>' +
-      '<span class="lt"><span class="mono" data-offset="' + w.offset + '">' + localTime(w.offset) + '</span> Ortszeit</span>' +
-      '<span class="lw"><span class="wi">' + x.i + '</span>' + w.temp + '° · ' + esc(x.t) + '</span>';
+      '<span class="lt"><span class="mono" data-offset="' + w.offset + '">' + lt + '</span> Ortszeit</span>' +
+      '<span class="lw"><span class="wi">' + x.i + '</span>' + w.temp + '° · ' + esc(x.t) + '</span>' +
+      // Joel ist dort im Aufenthalt und es ist Nacht
+      (el.getAttribute('data-label') === 'Joel ist hier' ? sleepNote(new Date(Date.now() + w.offset * 1000).getUTCHours(), lt, city(code)) : '');
+  }
+  // 🌙 Nachts (23–7 Uhr Ortszeit) Hinweis, dass Joel wahrscheinlich schläft
+  var fmtHour = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false });
+  function sleepNote(hour, timeStr, place) {
+    if (!(hour >= 23 || hour < 7)) return '';
+    return '<p class="sleep">🌙 In ' + esc(place) + ' ist es ' + esc(timeStr) + ' Uhr. Joel schläft wahrscheinlich, lieber nicht anrufen 😴</p>';
   }
   function routeBlock(f, p) {
     var s = stOf(f), late = delayMin(f) >= 5;
@@ -1164,9 +1271,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       else if (evs.some(function (e) { return e.kind === 'sick'; })) { cls += ' sick'; tag = 'KR'; label += ' krank'; }
       else if (evs.some(function (e) { return e.kind === 'duty'; })) { cls += ' duty'; tag = evs[0].label === 'Abrufbereitschaft' ? 'SBY' : 'RES'; label += ' ' + evs[0].label; }
       if (awayDays[k]) { cls += ' away'; if (!tag) tag = awayDays[k]; label += ' in ' + city(awayDays[k]); }
-      if (evs.length || awayDays[k]) cls += ' has';
+      var free = isFreeDay(k, todayKey);
+      if (free) { cls += ' free'; tag = 'frei'; label += ' frei'; }
+      if (evs.length || awayDays[k] || free) cls += ' has';
       if (k === todayKey) cls += ' today';
-      html += evs.length || awayDays[k]
+      html += evs.length || awayDays[k] || free
         ? '<button type="button" class="' + cls + '" data-k="' + k + '" aria-label="' + esc(label) + '"><span class="n">' + d + '</span><span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span></button>'
         : '<div class="' + cls + '"><span class="n">' + d + '</span>' + (tag ? '<span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span>' : '') + '</div>';
     }
@@ -1195,6 +1304,8 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     if (ev.target === dayDlg) closeDay();
     var s = ev.target.closest('[data-show]');
     if (s) { closeDay(); showInList(s.getAttribute('data-show')); }
+    var mt = ev.target.closest('[data-meet]');
+    if (mt) { closeDay(); openMsg('Hey Joel, hast du am ' + fmtDay.format(new Date(mt.getAttribute('data-meet') + 'T12:00:00Z')) + ' Zeit? 😊'); }
   });
   dayDlg.addEventListener('submit', function (ev) {
     var form = ev.target.closest('form.crew'); if (!form) return;
@@ -1256,6 +1367,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       html += '<article class="dd-card"><div class="dd-head"><span class="chip done">Aufenthalt</span></div>' +
         '<p class="dd-big">' + flag(away) + 'Joel ist in ' + esc(city(away)) + '</p>' +
         '<div class="local" data-ap="' + away + '" data-label="Gerade dort"></div></article>';
+    }
+    if (!evs.length && !away && isFreeDay(k, dayKey(now))) {
+      html += '<article class="dd-card"><div class="dd-head"><span class="chip live">Frei</span></div>' +
+        '<p class="dd-big">🎉 Joel hat frei</p><p class="dd-stay">Kein Dienst geplant. Zeit für ein Treffen?</p>' +
+        (canMsg ? '<button type="button" class="btn" data-meet="' + k + '">💬 Treffen vorschlagen</button>' : '') + '</article>';
     }
     if (evs.length) html += '<button type="button" class="linkbtn" data-show="' + k + '">In der Liste anzeigen</button>';
     document.getElementById('day-body').innerHTML = html;
@@ -1571,6 +1687,180 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     toggle.addEventListener('change', function () {
       if (!toggle.checked && !busy) jumpscare();
       else if (!toggle.checked) toggle.checked = true;
+    });
+  })();
+
+  // ---------- 💬 Nachrichten an Joel: verschlüsselt als GitHub-Issue gespeichert ----------
+  var MSG_TOKEN = '__MSG_TOKEN__'; if (MSG_TOKEN.indexOf('__') === 0) MSG_TOKEN = '';
+  var pagePw = null; try { pagePw = localStorage.getItem('dienstplan-pw'); } catch (e) {}
+  var cryptoOk = !!(window.crypto && crypto.subtle && pagePw && /\.github\.io$/.test(location.hostname));
+  var canMsg = cryptoOk && !!MSG_TOKEN;
+  function b64e(u) { var s = ''; u = new Uint8Array(u); for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); }
+  function msgKey(salt, usage) {
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(pagePw), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+      return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, [usage]);
+    });
+  }
+  function encMsg(obj) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    return msgKey(salt, 'encrypt').then(function (k) {
+      return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, new TextEncoder().encode(JSON.stringify(obj)));
+    }).then(function (ct) { return 'DPM1:' + b64e(salt) + ':' + b64e(iv) + ':' + b64e(ct); });
+  }
+  function decMsg(body) {
+    var p = String(body || '').trim().split(':');
+    if (p[0] !== 'DPM1' || p.length !== 4) return Promise.reject(new Error('kein'));
+    return msgKey(b64u(p[1]), 'decrypt').then(function (k) {
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64u(p[2]) }, k, b64u(p[3]));
+    }).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+  var msgDlg = document.getElementById('msgdlg');
+  function openMsg(prefill) {
+    if (!canMsg) return;
+    try { document.getElementById('msg-name').value = localStorage.getItem('dienstplan-name') || ''; } catch (e) {}
+    document.getElementById('msg-text').value = prefill || '';
+    document.getElementById('msg-status').textContent = '';
+    if (msgDlg.showModal) msgDlg.showModal(); else msgDlg.setAttribute('open', '');
+    (document.getElementById('msg-name').value ? document.getElementById('msg-text') : document.getElementById('msg-name')).focus();
+  }
+  document.getElementById('msg-close').addEventListener('click', function () { msgDlg.close ? msgDlg.close() : msgDlg.removeAttribute('open'); });
+  msgDlg.addEventListener('click', function (ev) { if (ev.target === msgDlg && msgDlg.close) msgDlg.close(); });
+  document.getElementById('msg-open').addEventListener('click', function () { openMsg(''); });
+  if (canMsg && !isJoel) document.getElementById('msg-open').hidden = false;
+  document.getElementById('msgform').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var name = document.getElementById('msg-name').value.trim(), text = document.getElementById('msg-text').value.trim();
+    var st = document.getElementById('msg-status'), btn = document.getElementById('msg-send');
+    if (!name || !text) { st.textContent = 'Bitte Name und Nachricht ausfüllen.'; return; }
+    try { localStorage.setItem('dienstplan-name', name); } catch (e) {}
+    btn.disabled = true; st.style.color = ''; st.textContent = 'Wird gesendet …';
+    encMsg({ n: name, t: text, at: Date.now() }).then(function (body) {
+      return fetch(ghApi + '/issues', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + MSG_TOKEN, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+        body: JSON.stringify({ title: '💬 Nachricht für Joel', body: body })
+      });
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      st.textContent = 'Gesendet ✓ Joel sieht sie beim nächsten Öffnen.';
+      document.getElementById('msg-text').value = '';
+      setTimeout(function () { if (msgDlg.open && msgDlg.close) msgDlg.close(); }, 1800);
+    }).catch(function () {
+      st.style.color = 'var(--sick)'; st.textContent = 'Senden hat nicht geklappt. Bitte später nochmals versuchen.';
+    }).then(function () { btn.disabled = false; });
+  });
+  // Nur bei Joel: Nachrichten laden und anzeigen
+  var READ_KEY = 'dienstplan-msg-read';
+  function loadMsgs() {
+    if (!isJoel || !cryptoOk) return;
+    var headers = { 'Accept': 'application/vnd.github+json' };
+    if (ghToken) headers['Authorization'] = 'Bearer ' + ghToken;
+    fetch(ghApi + '/issues?state=open&per_page=50', { headers: headers, cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        var mine = list.filter(function (i) { return !i.pull_request && /^DPM1:/.test((i.body || '').trim()); });
+        return Promise.all(mine.map(function (i) {
+          return decMsg(i.body).then(function (m) { m.id = i.number; return m; }, function () { return null; });
+        }));
+      })
+      .then(function (msgs) { renderMsgs(msgs.filter(Boolean).sort(function (a, b) { return b.at - a.at; })); })
+      .catch(function () {});
+  }
+  function renderMsgs(msgs) {
+    var el = document.getElementById('msgs');
+    if (!msgs.length) { el.hidden = true; return; }
+    var read = []; try { read = JSON.parse(localStorage.getItem(READ_KEY) || '[]'); } catch (e) {}
+    var unread = msgs.filter(function (m) { return read.indexOf(m.id) < 0; }).length;
+    var when = new Intl.DateTimeFormat('de-CH', { timeZone: TZ, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = '<div class="msgs-head"><b>💬 Nachrichten' + (unread ? ' · ' + unread + ' neu' : '') + '</b>' +
+      (unread ? '<button type="button" class="linkbtn" id="msgs-read">Alle als gelesen markieren</button>' : '') + '</div>' +
+      '<div class="msg-list">' + msgs.slice(0, 20).map(function (m) {
+        return '<div class="msg-item' + (read.indexOf(m.id) < 0 ? ' unread' : '') + '"><span class="who">' + esc(m.n) + '</span><span class="when">' + when.format(new Date(m.at)) + '</span><p>' + esc(m.t) + '</p></div>';
+      }).join('') + '</div>';
+    el.hidden = false;
+    var btn = document.getElementById('msgs-read');
+    if (btn) btn.onclick = function () {
+      try { localStorage.setItem(READ_KEY, JSON.stringify(msgs.map(function (m) { return m.id; }))); } catch (e) {}
+      renderMsgs(msgs);
+    };
+  }
+
+  // ---------- 🎁 Jahresrückblick (wie "Wrapped") ----------
+  (function () {
+    var now = new Date(), month = +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, month: 'numeric' }).format(now);
+    var thisYear = +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric' }).format(now);
+    var year = month === 1 ? thisYear - 1 : thisYear; // im Januar noch das Vorjahr
+    var banner = document.getElementById('wrapped-banner');
+    if (month === 12 || month === 1) {
+      document.getElementById('wrapped-banner-text').textContent = 'Joels Jahr ' + year + ' in der Luft ist da';
+      banner.hidden = false;
+    }
+    banner.addEventListener('click', function () { openWrapped(year); });
+    document.getElementById('wrapped-open').addEventListener('click', function () {
+      var d = document.getElementById('settings'); if (d.close) d.close(); openWrapped(year);
+    });
+    var wrap = document.getElementById('wrapped'), slideEl = document.getElementById('wr-slide'), bars = document.getElementById('wr-bars');
+    var slides = [], idx = 0, timer = null;
+    var BG = ['linear-gradient(160deg,#1d2c4d,#070c17)', 'linear-gradient(160deg,#6b2bd6,#1b0b3a)', 'linear-gradient(160deg,#e0735f,#6e2c5f)',
+      'linear-gradient(160deg,#0f7a5c,#04140f)', 'linear-gradient(160deg,#c78a2c,#3a1a05)', 'linear-gradient(160deg,#1f6fd1,#0a1a3a)', 'linear-gradient(160deg,#c2405a,#2a0b1a)', 'linear-gradient(160deg,#1d2c4d,#070c17)'];
+    function fimg(c) { return CC[c] ? '<img src="' + flagUrl(c) + '" alt="">' : ''; }
+    function build(y) {
+      var list = hist.filter(function (h) { var t = parseDate(h.d); return t && +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric' }).format(t) === y && t <= new Date(); });
+      if (!list.length) return [{ html: '<span class="k">' + y + '</span><div class="mid">Noch keine Flüge gespeichert</div><p>Sobald Joel fliegt, füllt sich dieser Rückblick.</p>' }];
+      var mins = 0, dist = 0, count = {}, ctry = {}, longest = list[0], perMonth = {};
+      list.forEach(function (h) {
+        mins += h.m || 0; dist += km(h.a, h.b);
+        if (h.b !== HOME) count[h.b] = (count[h.b] || 0) + 1;
+        if (CC[h.a]) ctry[CC[h.a]] = h.a; if (CC[h.b]) ctry[CC[h.b]] = h.b;
+        if ((h.m || 0) > (longest.m || 0)) longest = h;
+        var mo = new Intl.DateTimeFormat('de-CH', { timeZone: TZ, month: 'long' }).format(parseDate(h.d));
+        perMonth[mo] = (perMonth[mo] || 0) + 1;
+      });
+      var top = Object.keys(count).sort(function (a, b) { return count[b] - count[a]; });
+      var busiest = Object.keys(perMonth).sort(function (a, b) { return perMonth[b] - perMonth[a]; })[0];
+      var hours = Math.round(mins / 60), kmR = Math.round(dist / 100) * 100;
+      var s = [];
+      s.push({ html: '<span class="k">Jahresrückblick ' + y + '</span><div class="mid">Joels Jahr<br>in der Luft</div><p>Schnall dich an, es geht los ✈️</p>' });
+      s.push({ html: '<span class="k">Flüge</span><div class="big" data-count="' + list.length + '">0</div><p>Mal ist Joel ' + y + ' abgehoben.<br>Und jedes Mal wieder sicher gelandet.</p>' });
+      s.push({ html: '<span class="k">In der Luft</span><div class="big" data-count="' + hours + '">0</div><p>Stunden über den Wolken.<br>Das sind ' + Math.round(hours / 24 * 10) / 10 + ' ganze Tage am Stück!</p>' });
+      s.push({ html: '<span class="k">Kilometer</span><div class="big" data-count="' + kmR + '" data-fmt="1">0</div><p>Das reicht ' + (kmR / 40075).toFixed(1).replace('.', ',') + '× um die Erde 🌍<br>oder ' + (kmR / 384400 * 100).toFixed(0) + ' % des Wegs zum Mond 🌙</p>' });
+      if (top.length) s.push({ html: '<span class="k">Lieblingsziel</span><div class="flags">' + fimg(top[0]).replace('<img', '<img style="width:96px;height:72px;border-radius:8px"') + '</div><div class="mid">' + esc(city(top[0])) + '</div><p>' + count[top[0]] + '× hingeflogen. Wohl kein Zufall 😉</p>' });
+      if (top.length > 1) s.push({ html: '<span class="k">Top-Ziele</span><div class="rank">' + top.slice(0, 5).map(function (c, i) {
+        return '<div>' + (i + 1) + '. ' + fimg(c) + esc(city(c)) + '<span>' + count[c] + '×</span></div>'; }).join('') + '</div>' });
+      s.push({ html: '<span class="k">Länder</span><div class="big" data-count="' + Object.keys(ctry).length + '">0</div><div class="flags">' + Object.keys(ctry).map(function (k) { return fimg(ctry[k]); }).join('') + '</div>' });
+      s.push({ html: '<span class="k">Längster Flug</span><div class="mid">' + esc(city(longest.a)) + ' → ' + esc(city(longest.b)) + '</div><p>' + esc(longest.f) + ' · ' + dur((longest.m || 0) * 60000) + '<br>Genug Zeit für drei Filme und ein Nickerchen 🍿</p>' +
+        (busiest ? '<p style="margin-top:14px">Fleissigster Monat: <b>' + esc(busiest) + '</b> mit ' + perMonth[busiest] + ' Flügen</p>' : '') });
+      s.push({ html: '<span class="k">Danke fürs Mitfliegen</span><div class="mid">Bis bald an Bord! ✈️</div><p>Joels Dienstplan · ' + y + '</p>' });
+      return s;
+    }
+    function animateCount(el) {
+      var target = +el.getAttribute('data-count'), fmt = el.getAttribute('data-fmt'), t0 = performance.now(), D = reduce ? 0 : 1200;
+      function step(t) {
+        var k = D ? Math.min(1, (t - t0) / D) : 1, v = Math.round(target * (1 - Math.pow(1 - k, 3)));
+        el.textContent = fmt ? fmtNum.format(v) : v;
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    function show(i) {
+      idx = i;
+      clearTimeout(timer);
+      wrap.style.background = BG[i % BG.length];
+      slideEl.innerHTML = slides[i].html;
+      slideEl.querySelectorAll('[data-count]').forEach(animateCount);
+      bars.innerHTML = slides.map(function (_, j) { return '<i class="' + (j < i ? 'done' : j === i ? 'now' : '') + '"><b></b></i>'; }).join('');
+      if (!reduce) timer = setTimeout(function () { if (idx < slides.length - 1) show(idx + 1); }, 6000);
+    }
+    function close() { clearTimeout(timer); wrap.hidden = true; document.body.style.overflow = ''; }
+    function openWrapped(y) { slides = build(y); wrap.hidden = false; document.body.style.overflow = 'hidden'; show(0); }
+    document.getElementById('wr-close').addEventListener('click', function (ev) { ev.stopPropagation(); close(); });
+    wrap.addEventListener('click', function (ev) {
+      if (ev.clientX < innerWidth * 0.3) { if (idx > 0) show(idx - 1); }
+      else if (idx < slides.length - 1) show(idx + 1); else close();
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (wrap.hidden) return;
+      if (ev.key === 'Escape') close(); else if (ev.key === 'ArrowRight') { if (idx < slides.length - 1) show(idx + 1); } else if (ev.key === 'ArrowLeft' && idx > 0) show(idx - 1);
     });
   })();
 
@@ -2000,6 +2290,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   renderStatus(); renderStats(); renderFav(); renderChanges(); renderList(); renderMap();
   if (curTheme === 'retro') flap();
   loadCrew();
+  loadMsgs();
   loadStatus(true);
   setInterval(function () { loadStatus(false); }, 3 * 60000);
   var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(renderMap, 200); });

@@ -102,7 +102,9 @@ $land = (Invoke-WebRequest -Uri 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/
 $landJson = [Text.Encoding]::UTF8.GetString($land)
 
 $template = [IO.File]::ReadAllText((Join-Path $dir 'template.html'), [Text.Encoding]::UTF8)
-$body = $template.Replace('__ICS_B64__', $b64).Replace('__LAND_JSON__', $landJson).Replace('__HISTORY_JSON__', $histJson)
+# MESSAGE_TOKEN: GitHub-Schluessel, der nur Issues anlegen darf (fuer "Nachricht an Joel"); landet nur in der verschluesselten Seite
+$msgToken = if ($env:MESSAGE_TOKEN -match '^[A-Za-z0-9_]+$') { $env:MESSAGE_TOKEN } else { '' }
+$body = $template.Replace('__ICS_B64__', $b64).Replace('__LAND_JSON__', $landJson).Replace('__HISTORY_JSON__', $histJson).Replace('__MSG_TOKEN__', $msgToken)
 
 $head = '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
