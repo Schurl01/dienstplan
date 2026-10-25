@@ -327,6 +327,12 @@ header p { margin: 0; color: var(--muted); max-width: 52ch; }
 .maplegend span { display: inline-flex; align-items: center; gap: 6px; }
 .maplegend i { width: 18px; height: 0; border-top: 1.5px solid var(--gold); display: inline-block; }
 .maplegend i.p { border-top: 1.5px dashed var(--muted); opacity: 0.6; }
+.maplegend .maphint { margin-left: auto; font-size: 11px; opacity: .8; }
+.globe-stage { position: relative; }
+.globe-stage canvas { display: block; width: 100%; touch-action: pan-y; cursor: grab; }
+.globe-stage canvas:active { cursor: grabbing; }
+.globe-lbls { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.globe-lbls span { position: absolute; transform: translate(7px, -110%); font-family: var(--font-data); font-size: 11px; font-weight: 600; color: var(--ink); text-shadow: 0 0 3px var(--bg), 0 0 6px var(--bg), 0 0 10px var(--bg); white-space: nowrap; transition: opacity .25s; }
 
 /* Kalender + Liste */
 .cal { padding: 20px; display: grid; gap: 14px; }
@@ -458,6 +464,18 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 .adminbox { border-top: 1px solid var(--line); padding-top: 18px; justify-items: stretch; }
 .adminbox summary { cursor: pointer; font-weight: 600; color: var(--muted); }
 .adminbox[open] summary { margin-bottom: 6px; }
+.traffic { display: grid; gap: 12px; }
+.traffic .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.traffic .tl { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.traffic .tl b { display: block; font-family: var(--font-data); font-size: 22px; color: var(--ink); }
+.traffic .tl span { font-size: 12px; color: var(--muted); }
+.traffic .tl.now b { color: var(--live); }
+.traffic .tl.now b::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--live); vertical-align: middle; animation: pulse 1.8s ease-in-out infinite; }
+.traffic .bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 90px; }
+.traffic .bars div { display: grid; gap: 3px; justify-items: center; align-self: end; font-size: 10px; color: var(--muted); }
+.traffic .bars i { display: block; width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--gold); }
+.traffic .bars em { font-style: normal; color: var(--ink); font-family: var(--font-data); }
+.traffic .note { margin: 0; font-size: 12px; color: var(--muted); }
 .admin { display: grid; gap: 14px; }
 .admin label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
 .admin input[type="url"], .admin input[type="password"] { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
@@ -527,10 +545,10 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   </section>
 
   <section style="display:grid;gap:14px" id="mapsec" data-sec="map">
-    <div class="sec-head"><h2>Routen</h2><span class="eyebrow">Alle Flüge im Plan</span></div>
+    <div class="sec-head"><h2>Routen</h2><span class="eyebrow" id="map-sub"></span></div>
     <div class="panel mapbox">
       <svg id="map" role="img" aria-label="Weltkarte mit Joels Flugrouten"></svg>
-      <div class="maplegend"><span><i></i>Kommend</span><span><i class="p"></i>Geflogen</span><span>● Zürich (Basis)</span></div>
+      <div class="maplegend"><span><i></i>Kommend</span><span><i class="p"></i>Geflogen</span><span>● Zürich (Basis)</span><span class="maphint">↔ Ziehen zum Drehen · Monat im Kalender wählen</span></div>
     </div>
   </section>
 
@@ -626,6 +644,10 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     <p class="hint">Gruselige Überraschungen im Halloween-Design. Zum Deaktivieren ausschalten.</p>
   </div>
 
+  <details class="set-group adminbox" id="trafficbox" hidden>
+    <summary>Nur für Joel: Besucher auf der Seite</summary>
+    <div class="traffic" id="traffic"><p class="msg">Wird geladen …</p></div>
+  </details>
   <details class="set-group adminbox" id="adminbox" hidden>
     <summary>Nur für Joel: Plan aktualisieren</summary>
     <form class="admin" id="admin">
@@ -1147,26 +1169,254 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     }).join('');
   }
 
-  // ---------- Weltkarte ----------
+  // three.js wird nur bei Bedarf geladen (Routen-Globus, Hyperflug-Design)
+  var threeWait = [];
+  function loadThree(ok, fail) {
+    if (window.THREE) return ok();
+    threeWait.push([ok, fail]);
+    if (threeWait.length > 1) return;
+    var sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    sc.onload = function () { var w = threeWait; threeWait = []; w.forEach(function (x) { x[0](); }); };
+    sc.onerror = function () { var w = threeWait; threeWait = []; w.forEach(function (x) { if (x[1]) x[1](); }); };
+    document.head.appendChild(sc);
+  }
+
+  // ---------- Routen des im Kalender gewählten Monats ----------
   var land = null;
   try { land = JSON.parse(document.getElementById('land').textContent); } catch (e) { land = null; }
+  function monthRoutes() {
+    var now = new Date(), routes = {}, ym = months.length ? months[mi][0] + '-' + pad(months[mi][1]) : '';
+    flights.forEach(function (f) {
+      if (!AP[f.from] || !AP[f.to] || dayKey(f.start).slice(0, 7) !== ym) return;
+      var k = [f.from, f.to].sort().join('-');
+      // Richtung immer ab Zürich, damit die Flieger von der Basis zum Ziel fliegen
+      var out = f.to === HOME && f.from !== HOME;
+      var r = routes[k] = routes[k] || { a: out ? f.to : f.from, b: out ? f.from : f.to, future: false };
+      if (f.end > now) r.future = true;
+    });
+    return Object.keys(routes).sort().map(function (k) { return routes[k]; });
+  }
   function renderMap() {
     var sec = document.getElementById('mapsec');
-    if (!window.d3 || !window.topojson || !land || !flights.length) { sec.hidden = true; return; }
+    if (!flights.length || !months.length) { sec.hidden = true; return; }
+    var list = monthRoutes();
+    var name = new Intl.DateTimeFormat('de-CH', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(months[mi][0], months[mi][1] - 1, 15)));
+    document.getElementById('map-sub').textContent = name + (list.length ? '' : ' · keine Flüge');
+    if (globe.ready()) globe.show(list);
+    else { renderMap2D(list); globe.start(); }
+  }
+
+  // 3D-Globus: Routen als Bögen, kleine Flieger fliegen ab Zürich zum Ziel; Farben aus dem aktiven Design
+  var globe = (function () {
+    var state = 0, box, cv, R, scene, cam, tilt, spin, atmo, routeGrp, lblBox, items = [], labels = [], sig = null, cur = [];
+    var visible = false, running = false, lastT = 0, time = 0, liveP = null;
+    var focusLon = 8.5, focusLat = 40, lon = 8.5, lat = 40, dragLon = 0, dragLat = 0, lastDrag = -99;
+    var tmpV, tmpM;
+    function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+    function ll(lo, la, r) {
+      var phi = (lo + 180) * Math.PI / 180, th = (90 - la) * Math.PI / 180;
+      return new THREE.Vector3(-r * Math.cos(phi) * Math.sin(th), r * Math.cos(th), r * Math.sin(phi) * Math.sin(th));
+    }
+    function earthTex() {
+      var c = document.createElement('canvas'), w = innerWidth < 700 ? 1024 : 2048; c.width = w; c.height = w / 2;
+      var x = c.getContext('2d');
+      x.fillStyle = css('--bg-deep'); x.fillRect(0, 0, w, w / 2);
+      if (window.d3 && window.topojson && land) {
+        var path = d3.geoPath(d3.geoEquirectangular().translate([w / 2, w / 4]).scale(w / (2 * Math.PI)), x);
+        x.beginPath(); path(d3.geoGraticule10()); x.strokeStyle = css('--grat'); x.lineWidth = 1; x.stroke();
+        x.beginPath(); path(topojson.feature(land, land.objects.land));
+        x.fillStyle = css('--land'); x.fill(); x.fillStyle = css('--gold-soft'); x.fill();
+        x.globalAlpha = 0.55; x.strokeStyle = css('--gold'); x.lineWidth = w / 1600; x.stroke(); x.globalAlpha = 1;
+      }
+      return new THREE.CanvasTexture(c);
+    }
+    function miniPlane(col, k) {
+      var g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: col });
+      var body = new THREE.Mesh(new THREE.ConeGeometry(0.011, 0.07, 8), m); body.rotation.x = Math.PI / 2; g.add(body);
+      var wing = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.004, 0.02), m); wing.position.z = -0.002; g.add(wing);
+      var tail = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.004, 0.012), m); tail.position.z = -0.03; g.add(tail);
+      g.scale.setScalar(k || 1);
+      return g;
+    }
+    function init() {
+      box = document.querySelector('.mapbox');
+      try { R = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { state = -1; return; }
+      tmpV = new THREE.Vector3(); tmpM = new THREE.Matrix4();
+      cv = R.domElement;
+      var stage = document.createElement('div'); stage.className = 'globe-stage';
+      lblBox = document.createElement('div'); lblBox.className = 'globe-lbls';
+      stage.appendChild(cv); stage.appendChild(lblBox);
+      box.insertBefore(stage, box.firstChild);
+      document.getElementById('map').style.display = 'none';
+      R.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      scene = new THREE.Scene();
+      cam = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
+      tilt = new THREE.Group(); spin = new THREE.Group(); tilt.add(spin); scene.add(tilt);
+      spin.add(new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.MeshBasicMaterial()));
+      atmo = new THREE.Mesh(new THREE.SphereGeometry(1.1, 48, 32), new THREE.ShaderMaterial({
+        uniforms: { c: { value: new THREE.Color() } },
+        vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'uniform vec3 c; varying vec3 vN; void main(){ float i = pow(clamp(-vN.z / 0.42, 0.0, 1.0), 2.2); gl_FragColor = vec4(c, i * 0.5); }',
+        side: THREE.BackSide, transparent: true, depthWrite: false
+      }));
+      scene.add(atmo);
+      routeGrp = new THREE.Group(); spin.add(routeGrp);
+      // Ziehen dreht den Globus; senkrechtes Wischen scrollt weiter die Seite
+      var dragging = false, sx = 0, sy = 0;
+      cv.addEventListener('pointerdown', function (e) { dragging = true; sx = e.clientX; sy = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} });
+      cv.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        dragLon -= (e.clientX - sx) * 0.35; dragLat = Math.max(-50, Math.min(50, dragLat + (e.clientY - sy) * 0.25));
+        sx = e.clientX; sy = e.clientY; lastDrag = time;
+      });
+      ['pointerup', 'pointercancel'].forEach(function (n) { cv.addEventListener(n, function () { dragging = false; }); });
+      new IntersectionObserver(function (es) { visible = es[0].isIntersecting; loop(); }).observe(box);
+      document.addEventListener('visibilitychange', loop);
+      addEventListener('resize', resize);
+      state = 2;
+      retheme(); resize();
+    }
+    function resize() {
+      if (state !== 2) return;
+      var W = Math.max(260, box.clientWidth - 16), H = Math.round(W * (W < 600 ? 0.9 : 0.56));
+      R.setSize(W, H); cam.aspect = W / H;
+      var t = Math.tan(cam.fov * Math.PI / 360);
+      cam.position.set(0, 0, Math.max(1.2 / t, 1.2 / (t * cam.aspect)));
+      cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+    }
+    function retheme() {
+      if (state !== 2) return;
+      var earth = spin.children[0];
+      if (earth.material.map) earth.material.map.dispose();
+      earth.material.map = earthTex(); earth.material.needsUpdate = true;
+      atmo.material.uniforms.c.value.set(css('--gold'));
+      sig = null; show(cur);
+    }
+    function clear() {
+      routeGrp.children.slice().forEach(function (o) {
+        routeGrp.remove(o);
+        o.traverse(function (m) { if (m.geometry) m.geometry.dispose(); if (m.material) m.material.dispose(); });
+      });
+      lblBox.innerHTML = ''; items = []; labels = []; liveP = null;
+    }
+    function show(list) {
+      cur = list;
+      if (state !== 2) return;
+      var s = list.map(function (r) { return r.a + r.b + (r.future ? 1 : 0); }).join(',');
+      if (s === sig) return;
+      sig = s; clear();
+      var gold = new THREE.Color(css('--gold')), muted = new THREE.Color(css('--muted')), aps = {}, now = new Date();
+      aps[HOME] = 1;
+      list.forEach(function (r, i) {
+        aps[r.a] = aps[r.b] = 1;
+        var a = ll(AP[r.a][1], AP[r.a][2], 1.002), b = ll(AP[r.b][1], AP[r.b][2], 1.002), d = a.distanceTo(b);
+        var c = new THREE.QuadraticBezierCurve3(a, a.clone().add(b).normalize().multiplyScalar(1.04 + d * 0.2), b), pts = c.getPoints(64);
+        var base = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), r.future
+          ? new THREE.LineBasicMaterial({ color: gold, transparent: true, opacity: 0.45 })
+          : new THREE.LineDashedMaterial({ color: muted, transparent: true, opacity: 0.55, dashSize: 0.02, gapSize: 0.025 }));
+        if (!r.future) base.computeLineDistances();
+        routeGrp.add(base);
+        // heller Schweif hinter dem Flieger
+        var trail = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: r.future ? gold : muted }));
+        routeGrp.add(trail);
+        var p = miniPlane(r.future ? gold : muted); routeGrp.add(p);
+        items.push({ c: c, p: p, trail: trail, dur: 2.6 + d * 2.4, off: i * 1.3 });
+      });
+      // Joel gerade in der Luft: eigener Flieger an der echten Position
+      var live = flights.filter(isAirborne)[0];
+      if (live && AP[live.from] && AP[live.to]) {
+        var la = ll(AP[live.from][1], AP[live.from][2], 1.002), lb = ll(AP[live.to][1], AP[live.to][2], 1.002);
+        var lc = new THREE.QuadraticBezierCurve3(la, la.clone().add(lb).normalize().multiplyScalar(1.04 + la.distanceTo(lb) * 0.2), lb);
+        liveP = { c: lc, f: live, p: miniPlane(new THREE.Color(css('--live')), 1.7) };
+        routeGrp.add(liveP.p); aps[live.from] = aps[live.to] = 1;
+      }
+      var sum = new THREE.Vector3();
+      Object.keys(aps).forEach(function (code) {
+        var home = code === HOME, pos = ll(AP[code][1], AP[code][2], 1.004);
+        sum.add(pos);
+        var dot = new THREE.Mesh(new THREE.SphereGeometry(home ? 0.016 : 0.011, 12, 8), new THREE.MeshBasicMaterial({ color: gold }));
+        dot.position.copy(pos); routeGrp.add(dot);
+        if (home) {
+          var ring = new THREE.Mesh(new THREE.RingGeometry(0.026, 0.034, 32), new THREE.MeshBasicMaterial({ color: gold, transparent: true, side: THREE.DoubleSide }));
+          ring.position.copy(pos); tmpM.lookAt(pos.clone().multiplyScalar(2), pos, new THREE.Vector3(0, 1, 0)); ring.quaternion.setFromRotationMatrix(tmpM);
+          routeGrp.add(ring); items.ring = ring;
+        }
+        var el = document.createElement('span'); el.textContent = code; lblBox.appendChild(el);
+        labels.push({ el: el, o: dot });
+      });
+      // Globus zur Mitte der Monatsziele drehen
+      sum.normalize();
+      focusLat = Math.asin(sum.y) * 180 / Math.PI;
+      focusLon = Math.atan2(sum.z, -sum.x) * 180 / Math.PI - 180;
+      if (focusLon < -180) focusLon += 360;
+      dragLon = 0; dragLat = 0;
+      loop();
+    }
+    function frame(t) {
+      if (!visible || document.hidden || state !== 2) { running = false; return; }
+      requestAnimationFrame(frame);
+      var dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0.016; lastT = t;
+      if (!reduce) time += dt;
+      var idle = time - lastDrag > 3 ? Math.sin(time * 0.18) * 14 : 0;
+      var tLon = focusLon + dragLon + idle, tLat = Math.max(-60, Math.min(70, focusLat * 0.85 + dragLat));
+      var dl = ((tLon - lon + 540) % 360) - 180;
+      lon += dl * Math.min(1, dt * 3); lat += (tLat - lat) * Math.min(1, dt * 3);
+      spin.rotation.y = -Math.PI / 2 - lon * Math.PI / 180;
+      tilt.rotation.x = lat * Math.PI / 180;
+      items.forEach(function (it) {
+        var cyc = it.dur + 1.4, u = ((time + it.off) % cyc) / it.dur;
+        it.p.visible = u <= 1;
+        if (u > 1) { it.trail.geometry.setDrawRange(0, 0); return; }
+        var pos = it.c.getPoint(u), tan = it.c.getTangent(u);
+        it.p.position.copy(pos);
+        tmpM.lookAt(pos.clone().add(tan), pos, pos.clone().normalize()); it.p.quaternion.setFromRotationMatrix(tmpM);
+        it.p.scale.setScalar(Math.pow(Math.sin(u * Math.PI), 0.35));
+        var i1 = Math.floor(u * 64), i0 = Math.max(0, i1 - 14);
+        it.trail.geometry.setDrawRange(i0, i1 - i0 + 1);
+      });
+      if (items.ring) items.ring.scale.setScalar(1 + (time * 0.8 % 1) * 0.9), items.ring.material.opacity = 1 - (time * 0.8 % 1);
+      if (liveP) {
+        var f = liveP.f, u2 = Math.max(0, Math.min(1, (Date.now() - effDep(f)) / (effArr(f) - effDep(f))));
+        var lp = liveP.c.getPoint(u2), lt = liveP.c.getTangent(u2);
+        liveP.p.position.copy(lp);
+        tmpM.lookAt(lp.clone().add(lt), lp, lp.clone().normalize()); liveP.p.quaternion.setFromRotationMatrix(tmpM);
+      }
+      scene.updateMatrixWorld();
+      var W = cv.clientWidth, H = cv.clientHeight;
+      labels.forEach(function (l) {
+        l.o.getWorldPosition(tmpV);
+        var front = tmpV.z > 0.25;
+        l.el.style.opacity = front ? '1' : '0';
+        if (!front) return;
+        tmpV.project(cam);
+        l.el.style.left = ((tmpV.x + 1) / 2 * W).toFixed(1) + 'px';
+        l.el.style.top = ((1 - tmpV.y) / 2 * H).toFixed(1) + 'px';
+      });
+      R.render(scene, cam);
+    }
+    function loop() { if (state === 2 && visible && !document.hidden && !running) { running = true; lastT = 0; requestAnimationFrame(frame); } }
+    return {
+      ready: function () { return state === 2; },
+      start: function () {
+        if (state !== 0) return;
+        state = 1;
+        loadThree(function () { init(); if (state === 2) renderMap(); }, function () { state = -1; });
+      },
+      show: show,
+      retheme: retheme
+    };
+  })();
+
+  // Flache Karte als Rückfall, falls 3D nicht geht
+  function renderMap2D(list) {
+    if (!window.d3 || !window.topojson || !land) return;
     var svg = d3.select('#map'), box = document.querySelector('.mapbox');
     var W = Math.max(280, box.clientWidth - 16), H = Math.round(W * (W < 600 ? 0.75 : 0.5));
     svg.attr('viewBox', '0 0 ' + W + ' ' + H).attr('height', H).selectAll('*').remove();
     var now = new Date();
-    var routes = {};
-    flights.forEach(function (f) {
-      if (!AP[f.from] || !AP[f.to]) return;
-      var k = [f.from, f.to].sort().join('-');
-      var r = routes[k] = routes[k] || { a: f.from, b: f.to, future: false };
-      if (f.end > now) r.future = true;
-    });
-    var list = Object.keys(routes).map(function (k) { return routes[k]; });
     var lines = list.map(function (r) { return { type: 'Feature', properties: r, geometry: { type: 'LineString', coordinates: [AP[r.a].slice(1), AP[r.b].slice(1)] } }; });
-    var proj = d3.geoNaturalEarth1().fitExtent([[30, 30], [W - 30, H - 30]], { type: 'FeatureCollection', features: lines });
+    var proj = d3.geoNaturalEarth1().fitExtent([[30, 30], [W - 30, H - 30]], lines.length ? { type: 'FeatureCollection', features: lines } : { type: 'Sphere' });
     var path = d3.geoPath(proj);
     svg.append('path').attr('class', 'grat').attr('d', path(d3.geoGraticule10()));
     svg.append('path').attr('class', 'land').attr('d', path(topojson.feature(land, land.objects.land)));
@@ -1340,6 +1590,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     document.getElementById('days').innerHTML = html;
     document.getElementById('prev').disabled = mi === 0;
     document.getElementById('next').disabled = mi === months.length - 1;
+    renderMap(); // Routen-Globus folgt dem gewählten Monat
   }
   document.getElementById('prev').onclick = function () { if (mi > 0) { mi--; renderCal(); } };
   document.getElementById('next').onclick = function () { if (mi < months.length - 1) { mi++; renderCal(); } };
@@ -1974,6 +2225,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     planeRGB = getComputedStyle(document.documentElement).getPropertyValue('--plane').trim() || planeRGB;
     if (sky) sky.setMode(t);
     if (hyper) hyper.set(t === 'future');
+    globe.retheme();
     if (t === 'retro') flap();
   }
   // Fallblatt-Effekt: Flugnummern und Codes "klappern" durch, bis der richtige Text steht
@@ -2160,7 +2412,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
 
   // ---------- 🚀 Hyperflug 3D: über die Alpen, durch die Wolken bis zum Globus – gesteuert durchs Scrollen ----------
   hyper = (function () {
-    var on = false, ready = false, loading = false, failed = false, running = false, io = null;
+    var on = false, ready = false, failed = false, running = false, io = null;
     var cv, hud, R, scene, cam, curve, plane, parts = {}, spin, globeC, bgCol, starMat, beacon, clouds = [], pulses = [];
     var trailPos, trailGeo, TRAIL = 90;
     var s = 0, vel = 0, lastScroll = 0, time = 0, lastT = 0, px = 0, py = 0, roll = 0;
@@ -2171,16 +2423,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var look, tmp, tmp2;
     function sm(a, b, x) { return THREE.MathUtils.smoothstep(x, a, b); }
 
-    function load(cb) {
-      if (window.THREE) return cb();
-      if (loading) return;
-      loading = true;
-      var sc = document.createElement('script');
-      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      sc.onload = function () { loading = false; cb(); };
-      sc.onerror = function () { loading = false; failed = true; };
-      document.head.appendChild(sc);
-    }
+    function load(cb) { loadThree(cb, function () { failed = true; }); }
 
     // Rauschen für das Gebirge
     function hash(x, y) { var h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); }
@@ -2570,6 +2813,71 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   applyLayout();
 
   // ---------- Plan aktualisieren (nur auf GitHub Pages) ----------
+  // ---------- Besucherzähler (Abacus, nur Zahlen, keine persönlichen Daten) ----------
+  // Jeder Besuch zählt Aufrufe und Geräte pro Tag; offene Seiten melden sich jede Minute ("gerade online").
+  // Joels eigene Geräte (mit gespeichertem Schlüssel) werden nicht mitgezählt.
+  (function traffic() {
+    var NS = 'https://abacus.jasoncameron.dev/', SPACE = 'joels-dienstplan-q7v3k9';
+    function key(k) { return SPACE + '/' + k; }
+    function day(d) { return dayKey(d).replace(/-/g, ''); }
+    function minute(d) { return d.toISOString().slice(0, 16).replace(/[-:T]/g, ''); }
+    function hit(k) { return fetch(NS + 'hit/' + key(k)).catch(function () {}); }
+    function get(k) {
+      return fetch(NS + 'get/' + key(k), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : { value: 0 }; })
+        .then(function (j) { return j.value || 0; }, function () { return null; });
+    }
+    var counting = /\.github\.io$/.test(location.hostname) && !isJoel;
+    if (counting) {
+      var now = new Date(), today = day(now), seen = null, known = null;
+      try { seen = localStorage.getItem('dienstplan-visit-day'); known = localStorage.getItem('dienstplan-visitor'); } catch (e) {}
+      hit('views'); hit('v-' + today);
+      if (seen !== today) { hit('u-' + today); try { localStorage.setItem('dienstplan-visit-day', today); } catch (e) {} }
+      if (!known) { hit('devices'); try { localStorage.setItem('dienstplan-visitor', '1'); } catch (e) {} }
+      var lastBeat = '';
+      var beat = function () {
+        if (document.hidden) return;
+        var m = minute(new Date());
+        if (m !== lastBeat) { lastBeat = m; hit('o-' + m); }
+      };
+      beat(); setInterval(beat, 15000);
+      document.addEventListener('visibilitychange', beat);
+    }
+
+    if (!isJoel) return;
+    var box = document.getElementById('trafficbox'), out = document.getElementById('traffic'), timer = null;
+    box.hidden = false;
+    function load() {
+      var now = new Date(), days = [];
+      for (var i = 6; i >= 0; i--) days.push(new Date(now - i * 864e5));
+      var prev = new Date(now - 60000);
+      Promise.all([get('o-' + minute(now)), get('o-' + minute(prev)), get('v-' + day(now)), get('devices'), get('views')]
+        .concat(days.map(function (d) { return get('u-' + day(d)); })))
+        .then(function (v) {
+          if (v[2] === null) { out.innerHTML = '<p class="note">Zähler gerade nicht erreichbar. Bitte später nochmals öffnen.</p>'; return; }
+          var online = Math.max(v[0], v[1]), uniq = v.slice(5), max = Math.max.apply(null, uniq.concat([1]));
+          var wd = new Intl.DateTimeFormat('de-CH', { weekday: 'short', timeZone: TZ });
+          out.innerHTML = '<div class="tiles">' +
+            '<div class="tl now"><b>' + online + '</b><span>gerade online</span></div>' +
+            '<div class="tl"><b>' + uniq[6] + '</b><span>Besucher heute · ' + v[2] + ' Aufrufe</span></div>' +
+            '<div class="tl"><b>' + uniq.reduce(function (a, b) { return a + b; }, 0) + '</b><span>Besucher letzte 7 Tage</span></div>' +
+            '<div class="tl"><b>' + v[3] + '</b><span>Geräte insgesamt · ' + v[4] + ' Aufrufe</span></div>' +
+            '</div><div class="bars" aria-label="Besucher pro Tag">' + uniq.map(function (n, i) {
+              return '<div><em>' + n + '</em><i style="height:' + Math.round(n / max * 60) + 'px"></i>' + wd.format(days[i]) + '</div>';
+            }).join('') + '</div>' +
+            '<p class="note">Gezählt werden nur Besucher, die das Passwort eingegeben haben. Deine eigenen Geräte zählen nicht mit. „Gerade online“ = in der letzten Minute aktiv.</p>';
+        });
+    }
+    box.addEventListener('toggle', function () {
+      clearInterval(timer);
+      if (box.open) { load(); timer = setInterval(load, 20000); }
+    });
+    dlg.addEventListener('close', function () { clearInterval(timer); });
+    document.getElementById('set-open').addEventListener('click', function () {
+      if (box.open) { clearInterval(timer); load(); timer = setInterval(load, 20000); }
+    });
+  })();
+
   // Speichert den neuen Link als verschlüsseltes Secret ICS_URL und startet den Workflow.
   (function admin() {
     if (!/\.github\.io$/.test(location.hostname)) return;
