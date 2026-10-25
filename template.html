@@ -76,7 +76,7 @@
   --sick: #ff8fa3; --sick-soft: rgba(255, 143, 163, 0.15); --plane: 255, 220, 190;
   color-scheme: dark;
 }
-:root[data-theme="sunset"] body { background: radial-gradient(130% 75% at 50% -18%, #ef8a5c 0%, #c4506a 26%, #6e2c5f 52%, #2a1638 76%, #170b24 100%) fixed; background-color: #2a1638; }
+:root[data-theme="sunset"] body::before { background: radial-gradient(130% 75% at 50% -18%, #ef8a5c 0%, #c4506a 26%, #6e2c5f 52%, #2a1638 76%, #170b24 100%); }
 /* 🟨 Retro-Abflugtafel */
 :root[data-theme="retro"] {
   --bg: #0b0b0c; --bg-deep: #050505; --glow: #18181b;
@@ -118,9 +118,6 @@
 #scare .got { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px; color: #f2e9e4; font-family: var(--font-display); font-size: clamp(36px, 9vw, 64px); opacity: 0; transition: opacity .5s ease; padding-inline: 16px; }
 #scare .got small { font-family: var(--font-body); font-size: 14px; color: #a99; }
 #scare .got.on { opacity: 1; }
-/* Freie Tage */
-.day.free { background: var(--live-soft); color: var(--live); border-color: transparent; }
-.day.free .tag { font-family: var(--font-body); font-size: 9px; letter-spacing: .04em; }
 /* Nachrichten */
 .hdr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .hdr-actions:not(:has(:not([hidden]))) { display: none; }
@@ -135,7 +132,9 @@
 .msgs-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .msgs-head b { font-size: 15px; }
 .msg-list { display: grid; gap: 8px; }
-.msg-item { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.msg-item { position: relative; padding: 10px 40px 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.msg-item .del { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; }
+.msg-item .del:hover, .msg-item .del:focus-visible { background: var(--sick-soft); color: var(--sick); }
 .msg-item.unread { box-shadow: inset 3px 0 0 var(--live); }
 .msg-item .who { font-weight: 700; } .msg-item .when { color: var(--muted); font-size: 12px; margin-left: 6px; }
 .msg-item p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -210,12 +209,15 @@
 .tile .sw { position: relative; height: 54px; border-radius: 8px; overflow: hidden; display: block; }
 .tile .sw i { position: absolute; left: 10px; bottom: 10px; width: 26px; height: 6px; border-radius: 3px; }
 .tile .sw em { position: absolute; right: 8px; top: 6px; font-style: normal; font-size: 18px; }
-.tile .nm { padding: 0 4px 2px; }
+.tile { min-width: 0; }
+.tile .nm { padding: 0 4px 2px; min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
 .tile[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 .tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 * { box-sizing: border-box; }
 html { background: var(--bg-deep); }
-body { background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 45%, var(--bg-deep) 100%) fixed; background-color: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; min-height: 100vh; transition: background-color .3s, color .3s; }
+/* Hintergrund als feste Ebene: iOS ignoriert background-attachment: fixed und würde den Verlauf über die ganze Seitenlänge strecken */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(120% 80% at 50% -10%, var(--glow) 0%, var(--bg) 45%, var(--bg-deep) 100%); }
+body { background-color: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; min-height: 100vh; transition: background-color .3s, color .3s; }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .theme { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
 .theme button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
@@ -473,7 +475,6 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       <span><i style="background:repeating-linear-gradient(135deg,var(--gold-soft) 0 3px,transparent 3px 7px);border:1px solid var(--line)"></i>Unterwegs</span>
       <span><i style="background:var(--duty-soft);border:1px solid var(--duty)"></i>Bereitschaft/Reserve</span>
       <span><i style="background:var(--sick-soft);border:1px solid var(--sick)"></i>Krank</span>
-      <span><i style="background:var(--live-soft);border:1px solid var(--live)"></i>Frei</span>
     </div>
     <div class="cal-foot">
       <button type="button" class="btn" id="cal-export">
@@ -828,12 +829,6 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   });
   var byDay = {};
   events.forEach(function (e) { var k = dayKey(e.start); (byDay[k] = byDay[k] || []).push(e); });
-
-  // Freie Tage: kein Dienst, nicht unterwegs, keine Ankunft, innerhalb des bekannten Plans und nicht in der Vergangenheit
-  var arrDays = {};
-  flights.forEach(function (f) { arrDays[dayKey(f.end)] = 1; });
-  var planEnd = events.reduce(function (m, e) { var k = dayKey(e.end); return k > m ? k : m; }, '');
-  function isFreeDay(k, todayKey) { return !byDay[k] && !awayDays[k] && !arrDays[k] && k >= todayKey && k <= planEnd; }
 
   // ---------- Neu / geändert seit dem letzten Besuch (pro Gerät) ----------
   var SEEN_KEY = 'dienstplan-seen', changes = {}, removed = [];
@@ -1305,11 +1300,9 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       else if (evs.some(function (e) { return e.kind === 'sick'; })) { cls += ' sick'; tag = 'KR'; label += ' krank'; }
       else if (evs.some(function (e) { return e.kind === 'duty'; })) { cls += ' duty'; tag = evs[0].label === 'Abrufbereitschaft' ? 'SBY' : 'RES'; label += ' ' + evs[0].label; }
       if (awayDays[k]) { cls += ' away'; if (!tag) tag = awayDays[k]; label += ' in ' + city(awayDays[k]); }
-      var free = isFreeDay(k, todayKey);
-      if (free) { cls += ' free'; tag = 'frei'; label += ' frei'; }
-      if (evs.length || awayDays[k] || free) cls += ' has';
+      if (evs.length || awayDays[k]) cls += ' has';
       if (k === todayKey) cls += ' today';
-      html += evs.length || awayDays[k] || free
+      html += evs.length || awayDays[k]
         ? '<button type="button" class="' + cls + '" data-k="' + k + '" aria-label="' + esc(label) + '"><span class="n">' + d + '</span><span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span></button>'
         : '<div class="' + cls + '"><span class="n">' + d + '</span>' + (tag ? '<span class="tag">' + flag(tag, 'sm') + esc(tag) + '</span>' : '') + '</div>';
     }
@@ -1338,8 +1331,6 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     if (ev.target === dayDlg) closeDay();
     var s = ev.target.closest('[data-show]');
     if (s) { closeDay(); showInList(s.getAttribute('data-show')); }
-    var mt = ev.target.closest('[data-meet]');
-    if (mt) { closeDay(); openMsg('Hey Joel, hast du am ' + fmtDay.format(new Date(mt.getAttribute('data-meet') + 'T12:00:00Z')) + ' Zeit? 😊'); }
   });
   dayDlg.addEventListener('submit', function (ev) {
     var form = ev.target.closest('form.crew'); if (!form) return;
@@ -1401,11 +1392,6 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       html += '<article class="dd-card"><div class="dd-head"><span class="chip done">Aufenthalt</span></div>' +
         '<p class="dd-big">' + flag(away) + 'Joel ist in ' + esc(city(away)) + '</p>' +
         '<div class="local" data-ap="' + away + '" data-label="Gerade dort"></div></article>';
-    }
-    if (!evs.length && !away && isFreeDay(k, dayKey(now))) {
-      html += '<article class="dd-card"><div class="dd-head"><span class="chip live">Frei</span></div>' +
-        '<p class="dd-big">🎉 Joel hat frei</p><p class="dd-stay">Kein Dienst geplant. Zeit für ein Treffen?</p>' +
-        (canMsg ? '<button type="button" class="btn" data-meet="' + k + '">💬 Treffen vorschlagen</button>' : '') + '</article>';
     }
     if (evs.length) html += '<button type="button" class="linkbtn" data-show="' + k + '">In der Liste anzeigen</button>';
     document.getElementById('day-body').innerHTML = html;
@@ -1784,7 +1770,25 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     }).then(function () { btn.disabled = false; });
   });
   // Nur bei Joel: Nachrichten laden und anzeigen
-  var READ_KEY = 'dienstplan-msg-read';
+  var READ_KEY = 'dienstplan-msg-read', HIDE_KEY = 'dienstplan-msg-deleted';
+  function hiddenMsgs() { try { return JSON.parse(localStorage.getItem(HIDE_KEY) || '[]'); } catch (e) { return []; } }
+  // Löschen: sofort ausblenden (pro Gerät) und das Issue auf GitHub schliessen, damit es auch auf anderen Geräten weg ist
+  function deleteMsgs(ids) {
+    var hid = hiddenMsgs().concat(ids);
+    try { localStorage.setItem(HIDE_KEY, JSON.stringify(hid.slice(-200))); } catch (e) {}
+    ids.forEach(function (id) {
+      function close(tok) {
+        return fetch(ghApi + '/issues/' + id, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+          body: JSON.stringify({ state: 'closed' })
+        }).then(function (r) { if (!r.ok) throw new Error(r.status); });
+      }
+      var first = MSG_TOKEN || ghToken;
+      if (!first) return;
+      close(first).catch(function () { if (ghToken && ghToken !== first) return close(ghToken); }).catch(function () {});
+    });
+  }
   function loadMsgs() {
     if (!isJoel || !cryptoOk) return;
     var headers = { 'Accept': 'application/vnd.github+json' };
@@ -1797,7 +1801,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
           return decMsg(i.body).then(function (m) { m.id = i.number; return m; }, function () { return null; });
         }));
       })
-      .then(function (msgs) { renderMsgs(msgs.filter(Boolean).sort(function (a, b) { return b.at - a.at; })); })
+      .then(function (msgs) { var hid = hiddenMsgs(); renderMsgs(msgs.filter(function (m) { return m && hid.indexOf(m.id) < 0; }).sort(function (a, b) { return b.at - a.at; })); })
       .catch(function () {});
   }
   function renderMsgs(msgs) {
@@ -1807,9 +1811,11 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     var unread = msgs.filter(function (m) { return read.indexOf(m.id) < 0; }).length;
     var when = new Intl.DateTimeFormat('de-CH', { timeZone: TZ, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     el.innerHTML = '<div class="msgs-head"><b>💬 Nachrichten' + (unread ? ' · ' + unread + ' neu' : '') + '</b>' +
-      (unread ? '<button type="button" class="linkbtn" id="msgs-read">Alle als gelesen markieren</button>' : '') + '</div>' +
+      '<span>' + (unread ? '<button type="button" class="linkbtn" id="msgs-read">Alle als gelesen markieren</button> ' : '') +
+      '<button type="button" class="linkbtn" id="msgs-del">Alle löschen</button></span></div>' +
       '<div class="msg-list">' + msgs.slice(0, 20).map(function (m) {
-        return '<div class="msg-item' + (read.indexOf(m.id) < 0 ? ' unread' : '') + '"><span class="who">' + esc(m.n) + '</span><span class="when">' + when.format(new Date(m.at)) + '</span><p>' + esc(m.t) + '</p></div>';
+        return '<div class="msg-item' + (read.indexOf(m.id) < 0 ? ' unread' : '') + '"><span class="who">' + esc(m.n) + '</span><span class="when">' + when.format(new Date(m.at)) + '</span><p>' + esc(m.t) + '</p>' +
+          '<button type="button" class="del" data-del="' + m.id + '" aria-label="Nachricht löschen" title="Löschen">🗑</button></div>';
       }).join('') + '</div>';
     el.hidden = false;
     var btn = document.getElementById('msgs-read');
@@ -1817,6 +1823,18 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
       try { localStorage.setItem(READ_KEY, JSON.stringify(msgs.map(function (m) { return m.id; }))); } catch (e) {}
       renderMsgs(msgs);
     };
+    document.getElementById('msgs-del').onclick = function () {
+      if (!confirm('Alle Nachrichten löschen?')) return;
+      deleteMsgs(msgs.map(function (m) { return m.id; }));
+      renderMsgs([]);
+    };
+    el.querySelectorAll('[data-del]').forEach(function (b) {
+      b.onclick = function () {
+        var id = +b.getAttribute('data-del');
+        deleteMsgs([id]);
+        renderMsgs(msgs.filter(function (m) { return m.id !== id; }));
+      };
+    });
   }
 
   // ---------- 🎁 Jahresrückblick (wie "Wrapped") ----------
@@ -1905,7 +1923,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     { id: 'dark', name: 'Nachtflug', bg: 'radial-gradient(120% 90% at 50% 0%, #1d2c4d, #070c17)', accent: '#d2b17c' },
     { id: 'light', name: 'Tageslicht', bg: 'radial-gradient(120% 90% at 50% 0%, #ffffff, #dfe6ef)', accent: '#946b22' },
     { id: 'autumn', name: 'Herbst & Halloween', bg: 'radial-gradient(120% 90% at 70% 10%, #4a2140, #110913)', accent: '#f08a2c', icon: '🎃' },
-    { id: 'sunset', name: 'Sonnenuntergang', bg: 'linear-gradient(180deg, #ef8a5c, #c4506a 40%, #2a1638)', accent: '#ffb36b', icon: '🌅' },
+    { id: 'sunset', name: 'Sonnen­untergang', bg: 'linear-gradient(180deg, #ef8a5c, #c4506a 40%, #2a1638)', accent: '#ffb36b', icon: '🌅' },
     { id: 'retro', name: 'Abflugtafel', bg: 'repeating-linear-gradient(180deg, #111 0 9px, #000 9px 10px)', accent: '#ffcc00', icon: '🛫' },
     { id: 'radar', name: 'Cockpit-Radar', bg: 'radial-gradient(circle at 50% 60%, #0f3a2b, #020b08 70%)', accent: '#3dff9a', icon: '📡' }
   ];
@@ -1913,7 +1931,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     document.getElementById('themes').innerHTML = THEMES.map(function (t) {
       return '<button type="button" class="tile" data-theme-set="' + t.id + '" aria-pressed="' + (t.id === curTheme) + '">' +
         '<span class="sw" style="background:' + t.bg + '"><i style="background:' + t.accent + '"></i>' + (t.icon ? '<em>' + t.icon + '</em>' : '') + '</span>' +
-        '<span class="nm">' + esc(t.name) + '</span></button>';
+        '<span class="nm" lang="de">' + esc(t.name) + '</span></button>';
     }).join('');
   }
   function applyTheme(t) {
