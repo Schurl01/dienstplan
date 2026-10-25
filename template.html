@@ -1,7 +1,7 @@
 <title>Joels Dienstplan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@400;500;600&display=swap">
 <style>
 /* Layout: Himmel mit langsam querenden Mini-Flugzeugen; Status → Kalender → Statistik → Routenkarte → Dienstliste.
    Dunkel ist Standard, "Hell" per Umschalter (data-theme="light", gemerkt im Browser). */
@@ -104,6 +104,35 @@
   color-scheme: dark;
 }
 :root[data-theme="radar"] h1, :root[data-theme="radar"] .status-title { text-shadow: 0 0 18px rgba(61, 255, 154, 0.35); }
+/* 🚀 Hyperflug 3D: WebGL-Szene (#three) statt Canvas-Himmel, Glas-Panels, Neon */
+:root[data-theme="future"] {
+  --bg: #05060f; --bg-deep: #020308; --glow: #1a1450;
+  --surface: rgba(8, 12, 30, 0.6); --surface-2: rgba(120, 200, 255, 0.08); --line: rgba(120, 220, 255, 0.2);
+  --ink: #eaf4ff; --muted: #93a3c4; --gold: #4de8ff; --gold-soft: rgba(77, 232, 255, 0.15); --on-gold: #03121a;
+  --land: #0d1a3a; --land-edge: rgba(77, 232, 255, 0.25); --grat: rgba(77, 232, 255, 0.06);
+  --live: #5dffb0; --live-soft: rgba(93, 255, 176, 0.14); --duty: #c08cff; --duty-soft: rgba(192, 140, 255, 0.16);
+  --sick: #ff5c8a; --sick-soft: rgba(255, 92, 138, 0.15); --plane: 77, 232, 255;
+  --font-display: "Unbounded", "Manrope", system-ui, sans-serif;
+  color-scheme: dark;
+}
+#three { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.4s ease; display: block; }
+:root[data-theme="future"] #sky { display: none; }
+:root[data-theme="future"] .panel { backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px -24px rgba(0, 0, 0, 0.8), 0 0 46px -20px rgba(77, 232, 255, 0.4); }
+:root[data-theme="future"] h1 { font-weight: 600; letter-spacing: -0.035em; transform: translate3d(0, calc(var(--hs, 0) * 0.4px), 0) scale(calc(1 - var(--hs, 0) * 0.0005)); opacity: calc(1 - var(--hs, 0) / 520); transform-origin: 0 50%; }
+:root[data-theme="future"] h1 em { font-style: normal; background: linear-gradient(90deg, #4de8ff, #b07cff 55%, #ff4fd8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+:root[data-theme="future"] h1, :root[data-theme="future"] header p { text-shadow: 0 2px 26px rgba(0, 0, 0, 0.85); }
+:root[data-theme="future"] h2 { font-weight: 500; letter-spacing: -0.02em; text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8); }
+:root[data-theme="future"] .status::before { height: 2px; background: linear-gradient(90deg, transparent, #4de8ff, #ff4fd8, transparent); opacity: 1; }
+#hud { position: fixed; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 2; display: grid; gap: 2px; padding: 7px 11px; border-radius: 10px; border: 1px solid rgba(77, 232, 255, 0.25); background: rgba(3, 6, 15, 0.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #4de8ff; text-shadow: 0 0 10px rgba(77, 232, 255, 0.6); pointer-events: none; opacity: 0; transition: opacity .6s; }
+#hud b { color: #fff; font-weight: 600; }
+:root[data-theme="future"] .wrap { overflow-x: clip; }
+/* Bühne oben frei lassen, damit Flugzeug und Alpen zu sehen sind */
+:root[data-theme="future"] header { min-height: 74vh; min-height: 74svh; align-content: start; }
+#hud.on { opacity: 0.9; }
+/* Abschnitte klappen beim Scrollen in 3D herein */
+.fx-on .fx { opacity: 0; transform: perspective(1200px) translateY(80px) rotateX(20deg) scale(.93); transform-origin: 50% 0; transition: opacity .9s cubic-bezier(.2, .8, .2, 1), transform 1.1s cubic-bezier(.2, .8, .2, 1); }
+.fx-on .fx.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .fx-on .fx { opacity: 1; transform: none; transition: none; } }
 /* Schalter */
 .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -210,6 +239,8 @@
 .tile .sw i { position: absolute; left: 10px; bottom: 10px; width: 26px; height: 6px; border-radius: 3px; }
 .tile .sw em { position: absolute; right: 8px; top: 6px; font-style: normal; font-size: 18px; }
 .tile { min-width: 0; }
+.tile.wide { grid-column: 1 / -1; }
+.tile .new { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: linear-gradient(90deg, #4de8ff, #ff4fd8); color: #05060f; font-size: 10px; letter-spacing: .06em; }
 .tile .nm { padding: 0 4px 2px; min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
 .tile[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 .tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -1917,7 +1948,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
   })();
 
   // ---------- Designs ----------
-  var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', sky = null, curTheme = 'dark';
+  var THEME_KEY = 'dienstplan-theme', planeRGB = '236,228,212', sky = null, hyper = null, curTheme = 'dark';
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var THEMES = [
     { id: 'dark', name: 'Nachtflug', bg: 'radial-gradient(120% 90% at 50% 0%, #1d2c4d, #070c17)', accent: '#d2b17c' },
@@ -1925,13 +1956,14 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     { id: 'autumn', name: 'Herbst & Halloween', bg: 'radial-gradient(120% 90% at 70% 10%, #4a2140, #110913)', accent: '#f08a2c', icon: '🎃' },
     { id: 'sunset', name: 'Sonnen­untergang', bg: 'linear-gradient(180deg, #ef8a5c, #c4506a 40%, #2a1638)', accent: '#ffb36b', icon: '🌅' },
     { id: 'retro', name: 'Abflugtafel', bg: 'repeating-linear-gradient(180deg, #111 0 9px, #000 9px 10px)', accent: '#ffcc00', icon: '🛫' },
-    { id: 'radar', name: 'Cockpit-Radar', bg: 'radial-gradient(circle at 50% 60%, #0f3a2b, #020b08 70%)', accent: '#3dff9a', icon: '📡' }
+    { id: 'radar', name: 'Cockpit-Radar', bg: 'radial-gradient(circle at 50% 60%, #0f3a2b, #020b08 70%)', accent: '#3dff9a', icon: '📡' },
+    { id: 'future', name: 'Hyperflug 3D', bg: 'radial-gradient(circle at 78% 20%, rgba(255,79,216,.75), transparent 38%), radial-gradient(circle at 18% 90%, rgba(77,232,255,.7), transparent 45%), linear-gradient(180deg, #120e3a, #05060f)', accent: '#4de8ff', icon: '🚀', wide: true, badge: 'Neu' }
   ];
   function renderThemes() {
     document.getElementById('themes').innerHTML = THEMES.map(function (t) {
-      return '<button type="button" class="tile" data-theme-set="' + t.id + '" aria-pressed="' + (t.id === curTheme) + '">' +
+      return '<button type="button" class="tile' + (t.wide ? ' wide' : '') + '" data-theme-set="' + t.id + '" aria-pressed="' + (t.id === curTheme) + '">' +
         '<span class="sw" style="background:' + t.bg + '"><i style="background:' + t.accent + '"></i>' + (t.icon ? '<em>' + t.icon + '</em>' : '') + '</span>' +
-        '<span class="nm" lang="de">' + esc(t.name) + '</span></button>';
+        '<span class="nm" lang="de">' + esc(t.name) + (t.badge ? '<span class="new">' + t.badge + '</span>' : '') + '</span></button>';
     }).join('');
   }
   function applyTheme(t) {
@@ -1941,6 +1973,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === t)); });
     planeRGB = getComputedStyle(document.documentElement).getPropertyValue('--plane').trim() || planeRGB;
     if (sky) sky.setMode(t);
+    if (hyper) hyper.set(t === 'future');
     if (t === 'retro') flap();
   }
   // Fallblatt-Effekt: Flugnummern und Codes "klappern" durch, bis der richtige Text steht
@@ -1996,7 +2029,7 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     function setup() {
       var small = W < 600, i;
       planes = []; leaves = []; clouds = []; bats = []; blips = []; batWait = 2;
-      var nPlanes = mode === 'radar' ? 0 : mode === 'autumn' ? (small ? 2 : 3) : (small ? 6 : 10);
+      var nPlanes = mode === 'radar' || mode === 'future' ? 0 : mode === 'autumn' ? (small ? 2 : 3) : (small ? 6 : 10);
       for (i = 0; i < nPlanes; i++) planes.push(spawnPlane(i, true));
       if (mode === 'autumn') for (i = 0; i < (small ? 16 : 30); i++) leaves.push(spawnLeaf(true));
       if (mode === 'sunset') for (i = 0; i < (small ? 4 : 7); i++) clouds.push(spawnCloud(true));
@@ -2124,6 +2157,359 @@ footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; j
     }
     return { setMode: function (m) { mode = m; setup(); if (reduce) draw(); } };
   })();
+
+  // ---------- 🚀 Hyperflug 3D: über die Alpen, durch die Wolken bis zum Globus – gesteuert durchs Scrollen ----------
+  hyper = (function () {
+    var on = false, ready = false, loading = false, failed = false, running = false, io = null;
+    var cv, hud, R, scene, cam, curve, plane, parts = {}, spin, globeC, bgCol, starMat, beacon, clouds = [], pulses = [];
+    var trailPos, trailGeo, TRAIL = 90;
+    var s = 0, vel = 0, lastScroll = 0, time = 0, lastT = 0, px = 0, py = 0, roll = 0;
+    var GR = 34, small = innerWidth < 700;
+    // Himmelsfarbe je Flugphase: Nacht über den Alpen → hell in den Wolken → dunkel → Weltall
+    var BG_AT = [0, 0.45, 0.7, 1], BG = [[0.06, 0.05, 0.17], [0.09, 0.12, 0.26], [0.02, 0.025, 0.065], [0.004, 0.004, 0.016]];
+    var V = function (x, y, z) { return new THREE.Vector3(x, y, z); };
+    var look, tmp, tmp2;
+    function sm(a, b, x) { return THREE.MathUtils.smoothstep(x, a, b); }
+
+    function load(cb) {
+      if (window.THREE) return cb();
+      if (loading) return;
+      loading = true;
+      var sc = document.createElement('script');
+      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+      sc.onload = function () { loading = false; cb(); };
+      sc.onerror = function () { loading = false; failed = true; };
+      document.head.appendChild(sc);
+    }
+
+    // Rauschen für das Gebirge
+    function hash(x, y) { var h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); }
+    function vnoise(x, y) {
+      var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+      var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      var a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+      return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+    }
+    function ridge(x, y) {
+      var sum = 0, amp = 1, f = 1;
+      for (var i = 0; i < 5; i++) { var n = 1 - Math.abs(vnoise(x * f, y * f) * 2 - 1); sum += n * n * amp; amp *= 0.5; f *= 2.03; }
+      return sum / 1.94;
+    }
+    function canvasTex(size, paint) {
+      var c = document.createElement('canvas'); c.width = c.height = size;
+      paint(c.getContext('2d'), size);
+      return new THREE.CanvasTexture(c);
+    }
+    var glowTex, puffTex;
+    function textures() {
+      glowTex = canvasTex(64, function (x, n) {
+        var g = x.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
+        g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,255,255,0.6)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.fillRect(0, 0, n, n);
+      });
+      puffTex = canvasTex(256, function (x, n) {
+        for (var i = 0; i < 10; i++) {
+          var cx = n * (0.3 + Math.random() * 0.4), cy = n * (0.38 + Math.random() * 0.24), r = n * (0.14 + Math.random() * 0.16);
+          var g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, 'rgba(255,255,255,0.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+          x.fillStyle = g; x.fillRect(0, 0, n, n);
+        }
+      });
+    }
+
+    function buildAlps() {
+      var seg = small ? 90 : 140, g = new THREE.PlaneGeometry(460, 460, seg, seg);
+      g.rotateX(-Math.PI / 2); g.translate(0, 0, -80);
+      var pos = g.attributes.position, col = new Float32Array(pos.count * 3), lit = [];
+      for (var i = 0; i < pos.count; i++) {
+        var x = pos.getX(i), z = pos.getZ(i);
+        var valley = 0.22 + 0.78 * sm(6, 45, Math.abs(x));
+        var y = Math.pow(ridge(x * 0.011 + 3.1, z * 0.011 + 7.7), 2.3) * 78 * valley - 4;
+        pos.setY(i, y);
+        var snow = sm(14, 26, y), rock = sm(0, 14, y);
+        col[i * 3] = 0.08 + rock * 0.1 + snow * 0.75;
+        col[i * 3 + 1] = 0.09 + rock * 0.1 + snow * 0.8;
+        col[i * 3 + 2] = 0.2 + rock * 0.12 + snow * 0.75;
+        if (y < 1.5 && hash(x, z) < 0.2) lit.push(x, y + 0.5, z);
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      g.computeVertexNormals();
+      scene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, metalness: 0, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })));
+      scene.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x4de8ff, wireframe: true, transparent: true, opacity: 0.07 })));
+      // Dorflichter in den Tälern
+      var lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(lit, 3));
+      scene.add(new THREE.Points(lg, new THREE.PointsMaterial({ color: 0xffc46b, size: 1.3, map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })));
+    }
+
+    function buildClouds() {
+      var n = small ? 70 : 140;
+      for (var i = 0; i < n; i++) {
+        var deck = i % 3 === 0, sc = 26 + Math.random() * 46;
+        var m = new THREE.SpriteMaterial({ map: puffTex, transparent: true, depthWrite: false, opacity: 0, color: new THREE.Color().setHSL(0.6 + Math.random() * 0.2, 0.45, 0.84) });
+        var sp = new THREE.Sprite(m);
+        sp.scale.set(sc * 1.7, sc, 1);
+        if (deck) sp.position.set((Math.random() - 0.5) * 460, 54 + Math.random() * 8, -120 - Math.random() * 440);
+        else sp.position.set((Math.random() - 0.5) * 170, 34 + Math.random() * 28, -95 - Math.random() * 190);
+        sp.userData.base = 0.35 + Math.random() * 0.4;
+        clouds.push(sp); scene.add(sp);
+      }
+    }
+
+    function buildStars() {
+      var n = small ? 1600 : 2800, p = new Float32Array(n * 3);
+      for (var i = 0; i < n; i++) {
+        var v = V(Math.random() - 0.5, Math.random() - 0.3, Math.random() - 0.5).normalize().multiplyScalar(700 + Math.random() * 400);
+        p[i * 3] = v.x; p[i * 3 + 1] = v.y + 100; p[i * 3 + 2] = v.z - 300;
+      }
+      var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+      starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, fog: false, depthWrite: false });
+      scene.add(new THREE.Points(g, starMat));
+    }
+
+    // Punkt auf der Kugel (passend zur UV-Abbildung von SphereGeometry)
+    function ll(lon, lat, r) {
+      var phi = (lon + 180) * Math.PI / 180, th = (90 - lat) * Math.PI / 180;
+      return V(-r * Math.cos(phi) * Math.sin(th), r * Math.cos(th), r * Math.sin(phi) * Math.sin(th));
+    }
+    function buildGlobe() {
+      var tilt = new THREE.Group(); tilt.position.copy(globeC); tilt.rotation.x = 0.5; scene.add(tilt);
+      spin = new THREE.Group(); tilt.add(spin);
+      var tex = (function () {
+        var c = document.createElement('canvas'); c.width = small ? 1024 : 2048; c.height = c.width / 2;
+        var x = c.getContext('2d'), w = c.width;
+        x.fillStyle = '#041027'; x.fillRect(0, 0, w, w / 2);
+        if (window.d3 && window.topojson && land) {
+          var path = d3.geoPath(d3.geoEquirectangular().translate([w / 2, w / 4]).scale(w / (2 * Math.PI)), x);
+          x.beginPath(); path(d3.geoGraticule10()); x.strokeStyle = 'rgba(77,232,255,0.16)'; x.lineWidth = 1; x.stroke();
+          x.beginPath(); path(topojson.feature(land, land.objects.land)); x.fillStyle = '#10335f'; x.fill();
+          x.strokeStyle = '#4de8ff'; x.lineWidth = w / 1400; x.stroke();
+        }
+        return new THREE.CanvasTexture(c);
+      })();
+      spin.add(new THREE.Mesh(new THREE.SphereGeometry(GR, 64, 48), new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.6, roughness: 0.75, metalness: 0.1 })));
+      // Atmosphären-Leuchten (Fresnel)
+      tilt.add(new THREE.Mesh(new THREE.SphereGeometry(GR * 1.16, 48, 32), new THREE.ShaderMaterial({
+        vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'varying vec3 vN; void main(){ float i = pow(0.72 - dot(vN, vec3(0.0, 0.0, 1.0)), 3.0); gl_FragColor = vec4(0.3, 0.85, 1.0, 1.0) * i; }',
+        side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+      })));
+      // Joels Routen als leuchtende Bögen, kommende mit wandernden Lichtpunkten
+      var now = new Date(), routes = {}, aps = {};
+      flights.forEach(function (f) {
+        if (!AP[f.from] || !AP[f.to]) return;
+        var k = [f.from, f.to].sort().join('-');
+        var r = routes[k] = routes[k] || { a: f.from, b: f.to, future: false };
+        if (f.end > now) r.future = true;
+        aps[f.from] = aps[f.to] = 1;
+      });
+      Object.keys(routes).forEach(function (k, i) {
+        var r = routes[k], a = ll(AP[r.a][1], AP[r.a][2], GR * 1.005), b = ll(AP[r.b][1], AP[r.b][2], GR * 1.005);
+        var lift = 1.06 + a.distanceTo(b) / GR * 0.22, mid = a.clone().add(b).normalize().multiplyScalar(GR * lift);
+        var c = new THREE.QuadraticBezierCurve3(a, mid, b);
+        spin.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(60)),
+          new THREE.LineBasicMaterial({ color: r.future ? 0x4de8ff : 0xff4fd8, transparent: true, opacity: r.future ? 0.95 : 0.55, blending: THREE.AdditiveBlending, depthWrite: false })));
+        if (r.future) {
+          var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xbff6ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+          sp.scale.setScalar(2.4); spin.add(sp); pulses.push({ c: c, sp: sp, off: i * 0.37 });
+        }
+      });
+      Object.keys(aps).forEach(function (c) {
+        var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: c === HOME ? 0xff4fd8 : 0x4de8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+        sp.position.copy(ll(AP[c][1], AP[c][2], GR * 1.01)); sp.scale.setScalar(c === HOME ? 5 : 1.8);
+        spin.add(sp); if (c === HOME) beacon = sp;
+      });
+    }
+
+    // SWISS-Langstreckenjet (A330) aus Grundformen, Nase zeigt nach +z
+    function buildPlane() {
+      plane = new THREE.Group();
+      var white = new THREE.MeshStandardMaterial({ color: 0xf4f6fa, metalness: 0.35, roughness: 0.32 });
+      var grey = new THREE.MeshStandardMaterial({ color: 0xa8b0bf, metalness: 0.7, roughness: 0.3 });
+      var dark = new THREE.MeshStandardMaterial({ color: 0x141926, metalness: 0.5, roughness: 0.4 });
+      var swiss = canvasTex(128, function (x) { x.fillStyle = '#e30613'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#fff'; x.fillRect(52, 26, 24, 76); x.fillRect(26, 52, 76, 24); });
+      swiss.repeat.set(1 / 2.6, 1 / 2.6);
+      var red = new THREE.MeshStandardMaterial({ map: swiss, metalness: 0.2, roughness: 0.4 });
+      function add(geo, mat, x, y, z) { var m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); plane.add(m); return m; }
+      add(new THREE.CylinderGeometry(0.42, 0.42, 6, 28), white, 0, 0, 0).rotation.x = Math.PI / 2;
+      add(new THREE.SphereGeometry(0.42, 28, 18), white, 0, 0, 3).scale.z = 1.9;
+      add(new THREE.ConeGeometry(0.42, 2, 28), white, 0, 0.08, -4).rotation.x = -Math.PI / 2;
+      add(new THREE.BoxGeometry(0.5, 0.12, 0.34), dark, 0, 0.27, 3.3).rotation.x = -0.45;
+      function flat(pts, depth, mat) {
+        var sh = new THREE.Shape(); sh.moveTo(pts[0], pts[1]);
+        for (var i = 2; i < pts.length; i += 2) sh.lineTo(pts[i], pts[i + 1]);
+        var m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: depth, bevelEnabled: false }), mat); plane.add(m); return m;
+      }
+      var wing = flat([0, 1.0, 6.2, -1.5, 6.2, -2.0, 0.6, -1.3, -0.6, -1.3, -6.2, -2.0, -6.2, -1.5], 0.12, white);
+      wing.rotation.x = Math.PI / 2; wing.position.set(0, -0.12, 0.4);
+      var stab = flat([0, 0.3, 2.2, -0.9, 2.2, -1.2, 0.3, -0.9, -0.3, -0.9, -2.2, -1.2, -2.2, -0.9], 0.08, white);
+      stab.rotation.x = Math.PI / 2; stab.position.set(0, 0.2, -3.5);
+      var fin = flat([0, 0, 1.9, 0, 2.6, 2.6, 1.7, 2.6], 0.1, red);
+      fin.rotation.y = Math.PI / 2; fin.position.set(-0.05, 0.3, -2.5);
+      [-1, 1].forEach(function (side) {
+        add(new THREE.BoxGeometry(0.05, 0.55, 0.4), red, side * 6.2, 0.18, -1.15);
+        var eng = add(new THREE.CylinderGeometry(0.3, 0.25, 1.4, 22), grey, side * 2.3, -0.55, 1.1); eng.rotation.x = Math.PI / 2;
+        add(new THREE.CylinderGeometry(0.25, 0.25, 0.04, 22), dark, side * 2.3, -0.55, 1.81).rotation.x = Math.PI / 2;
+        add(new THREE.BoxGeometry(0.08, 0.32, 0.9), white, side * 2.3, -0.3, 0.8);
+        var glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x4de8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }));
+        glow.position.set(side * 2.3, -0.55, 0.3); glow.scale.setScalar(1.1); plane.add(glow);
+        parts[side < 0 ? 'engL' : 'engR'] = glow;
+        var nav = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: side < 0 ? 0xff2a3d : 0x2aff7a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+        nav.position.set(side * 6.25, -0.05, -1.5); nav.scale.setScalar(0.9); plane.add(nav);
+      });
+      parts.strobe = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+      parts.strobe.position.set(0, 0.6, -0.5); parts.strobe.scale.setScalar(1.8); plane.add(parts.strobe);
+      var rim = new THREE.PointLight(0x4de8ff, 0.9, 14); rim.position.set(0, 3, -2); plane.add(rim);
+      scene.add(plane);
+    }
+
+    // Kondensstreifen: Punkte hinter beiden Triebwerken, die nach hinten wegtreiben
+    function buildTrail() {
+      trailPos = new Float32Array(TRAIL * 2 * 3);
+      var col = new Float32Array(TRAIL * 2 * 3);
+      for (var i = 0; i < TRAIL * 2; i++) { var f = Math.pow(1 - Math.floor(i / 2) / TRAIL, 1.8) * 0.4; col[i * 3] = f * 0.6; col[i * 3 + 1] = f * 0.95; col[i * 3 + 2] = f; }
+      trailGeo = new THREE.BufferGeometry();
+      trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+      trailGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      var pts = new THREE.Points(trailGeo, new THREE.PointsMaterial({ size: 0.35, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      pts.frustumCulled = false; scene.add(pts);
+    }
+
+    function init() {
+      try {
+        cv = document.createElement('canvas'); cv.id = 'three'; cv.setAttribute('aria-hidden', 'true');
+        document.body.insertBefore(cv, document.body.firstChild);
+        R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+      } catch (e) { failed = true; if (cv) cv.remove(); return; }
+      R.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 1.75));
+      R.setSize(innerWidth, innerHeight, false);
+      look = V(0, 0, 0); tmp = V(0, 0, 0); tmp2 = V(0, 0, 0);
+      globeC = V(0, 150, -560);
+      scene = new THREE.Scene(); bgCol = new THREE.Color(); scene.background = bgCol;
+      scene.fog = new THREE.FogExp2(0x000000, 0.0055);
+      cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 3000);
+      scene.add(new THREE.HemisphereLight(0x9fc0ff, 0x2a1450, 1.0));
+      var moon = new THREE.DirectionalLight(0xdfe8ff, 1.7); moon.position.set(-80, 140, 60); scene.add(moon);
+      var dusk = new THREE.DirectionalLight(0xff5fc8, 0.7); dusk.position.set(120, 40, -200); scene.add(dusk);
+      var mag = new THREE.PointLight(0xff3fd1, 1.6, 300); mag.position.set(70, 175, -490); scene.add(mag);
+      var cyan = new THREE.PointLight(0x4de8ff, 1.3, 300); cyan.position.set(-80, 120, -500); scene.add(cyan);
+      textures(); buildAlps(); buildClouds(); buildStars(); buildGlobe(); buildPlane(); buildTrail();
+      // Flugbahn der Kamera: Start über den Alpen → Steigflug → Wolken → Weltall → Blick auf den Globus
+      curve = new THREE.CatmullRomCurve3([V(0, 24, 80), V(0, 26, 20), V(-12, 30, -50), V(8, 40, -120), V(-6, 50, -190), V(4, 68, -260), V(0, 98, -330), V(0, 138, -400), V(0, 160, -448)]);
+      hud = document.createElement('div'); hud.id = 'hud'; hud.setAttribute('aria-hidden', 'true'); document.body.appendChild(hud);
+      addEventListener('resize', function () {
+        if (!R) return;
+        R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix();
+      });
+      addEventListener('pointermove', function (e) { px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5; }, { passive: true });
+      addEventListener('deviceorientation', function (e) {
+        if (e.gamma == null) return;
+        px = Math.max(-0.5, Math.min(0.5, e.gamma / 60)); py = Math.max(-0.5, Math.min(0.5, (e.beta - 45) / 60));
+      });
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) start(); });
+      lastScroll = scrollY;
+      ready = true;
+    }
+
+    var PHASES = [[0.12, 'Start · Zürich'], [0.36, 'Steigflug · Alpen'], [0.6, 'Durch die Wolken'], [0.82, 'Reiseflughöhe'], [1.01, 'Orbit · Joels Routen']];
+    function frame(t) {
+      if (!on || document.hidden) { running = false; return; }
+      requestAnimationFrame(frame);
+      var dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0.016; lastT = t;
+      if (!reduce) time += dt;
+      var y = scrollY, max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      var target = Math.min(1, Math.max(0, y / max));
+      vel += ((y - lastScroll) / dt - vel) * Math.min(1, dt * 5); lastScroll = y;
+      s += (target - s) * Math.min(1, dt * 3.2);
+      document.documentElement.style.setProperty('--hs', Math.min(600, y).toFixed(0));
+
+      var k = 0; while (k < 2 && s > BG_AT[k + 1]) k++;
+      var f = (s - BG_AT[k]) / (BG_AT[k + 1] - BG_AT[k]), A = BG[k], B = BG[k + 1];
+      bgCol.setRGB(A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f);
+      scene.fog.color.copy(bgCol); scene.fog.density = 0.0055 * (1 - sm(0.55, 0.78, s));
+      starMat.opacity = 0.35 + 0.65 * sm(0.5, 0.8, s);
+
+      // Kamera fährt die Bahn ab und schwenkt am Ende auf den Globus
+      var gk = sm(0.6, 0.97, s), cp = curve.getPointAt(s);
+      var back = Math.max(0, 1 / cam.aspect - 0.9) * 55 * gk; // Hochformat: weiter weg, damit der Globus ganz drauf ist
+      cam.position.set(cp.x + px * 3, cp.y - py * 2 + back * 0.25, cp.z + back);
+      look.copy(curve.getPointAt(Math.min(1, s + 0.04))); look.y -= 6 * (1 - gk); look.lerp(globeC, gk);
+      cam.lookAt(look);
+      var fov = 55 + Math.min(22, Math.abs(vel) * 0.012);
+      cam.fov += (fov - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
+
+      // Flugzeug: vor der Kamera her, am Ende im Orbit um den Globus
+      var ok = sm(0.8, 0.96, s), a = time * 0.45, r = GR * 1.5;
+      var cpos = curve.getPointAt(Math.min(1, s + 0.02)); cpos.y -= 2.6;
+      var ctar = curve.getPointAt(Math.min(1, s + 0.06)); ctar.y -= 2.6;
+      tmp.set(Math.cos(a) * r, Math.sin(a) * r * 0.25 + 6, Math.sin(a) * r).add(globeC);
+      tmp2.set(Math.cos(a + 0.1) * r, Math.sin(a + 0.1) * r * 0.25 + 6, Math.sin(a + 0.1) * r).add(globeC);
+      plane.position.copy(cpos).lerp(tmp, ok);
+      plane.position.y += Math.sin(time * 1.7) * 0.15;
+      plane.lookAt(ctar.lerp(tmp2, ok));
+      var tRoll = Math.max(-0.7, Math.min(0.7, -vel * 0.0009)) * (1 - ok) - 0.45 * ok + Math.sin(time * 1.3) * 0.06;
+      roll += (tRoll - roll) * Math.min(1, dt * 3); plane.rotateZ(roll);
+      plane.scale.setScalar(0.3 + ok * 0.9);
+      parts.strobe.material.opacity = (time % 1.3) < 0.07 ? 1 : 0;
+      var boost = 1 + Math.min(1.5, Math.abs(vel) * 0.002);
+      parts.engL.scale.setScalar(1.1 * boost); parts.engR.scale.setScalar(1.1 * boost);
+
+      // Kondensstreifen weiterschieben
+      plane.updateMatrixWorld();
+      parts.engL.getWorldPosition(tmp); parts.engR.getWorldPosition(tmp2);
+      if (!trailPos.started) { for (var q = 0; q < trailPos.length; q += 6) { trailPos[q] = tmp.x; trailPos[q + 1] = tmp.y; trailPos[q + 2] = tmp.z; trailPos[q + 3] = tmp2.x; trailPos[q + 4] = tmp2.y; trailPos[q + 5] = tmp2.z; } trailPos.started = true; }
+      trailPos.copyWithin(6, 0, trailPos.length - 6);
+      trailPos[0] = tmp.x; trailPos[1] = tmp.y; trailPos[2] = tmp.z; trailPos[3] = tmp2.x; trailPos[4] = tmp2.y; trailPos[5] = tmp2.z;
+      plane.getWorldDirection(tmp);
+      var drift = (8 + Math.abs(vel) * 0.02) * dt * plane.scale.x;
+      for (var i = 6; i < trailPos.length; i += 3) { trailPos[i] -= tmp.x * drift; trailPos[i + 1] -= tmp.y * drift; trailPos[i + 2] -= tmp.z * drift; }
+      trailGeo.attributes.position.needsUpdate = true;
+
+      // Wolken: dicht beim Durchfliegen, nahe an der Kamera durchsichtig, beim Globus weg
+      var cf = 1 - sm(0.74, 0.9, s);
+      clouds.forEach(function (c) { c.material.opacity = c.userData.base * cf * sm(4, 34, c.position.distanceTo(cam.position)); });
+
+      spin.rotation.y = -Math.PI / 2 + Math.sin(time * 0.12) * 0.9;
+      pulses.forEach(function (p) { p.sp.position.copy(p.c.getPoint((time * 0.22 + p.off) % 1)); });
+      if (beacon) beacon.scale.setScalar(4 + Math.sin(time * 3) * 1.5);
+
+      var ph = PHASES[0][1]; for (var j = 0; j < PHASES.length; j++) if (s < PHASES[j][0]) { ph = PHASES[j][1]; break; }
+      hud.innerHTML = '<b>' + ph + '</b><span>ALT ' + fmtNum.format(Math.round(Math.pow(s, 1.15) * 410) * 100) + ' ft · SPD ' + Math.round(250 + s * 230 + Math.min(300, Math.abs(vel) * 0.15)) + ' kt</span>';
+
+      R.render(scene, cam);
+      // neu gerenderte Listeneinträge ebenfalls einfliegen lassen
+      if (t - lastReveal > 1000) { lastReveal = t; reveal(true); }
+    }
+    var lastReveal = 0;
+    function start() { if (on && ready && !running && !document.hidden) { running = true; lastT = 0; requestAnimationFrame(frame); } }
+
+    // Abschnitte erst beim Hineinscrollen in 3D einklappen lassen
+    function reveal(v) {
+      if (!('IntersectionObserver' in window)) return;
+      document.documentElement.classList.toggle('fx-on', v);
+      if (!v) return;
+      io = io || new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
+      document.querySelectorAll('header > p, #sections > section:not([data-sec="list"]), [data-sec="list"] > .sec-head, #upcoming > *').forEach(function (el) {
+        if (el.classList.contains('fx')) return;
+        el.classList.add('fx'); io.observe(el);
+      });
+    }
+    function set(v) {
+      on = v; reveal(v);
+      if (!v) { if (cv) cv.style.opacity = '0'; if (hud) hud.classList.remove('on'); document.documentElement.style.removeProperty('--hs'); return; }
+      if (failed) return;
+      load(function () {
+        if (!on) return;
+        if (!ready) init();
+        if (failed) return;
+        requestAnimationFrame(function () { cv.style.opacity = '1'; hud.classList.add('on'); });
+        start();
+      });
+    }
+    return { set: set };
+  })();
+  hyper.set(curTheme === 'future');
 
   // ---------- Einstellungen: Fenster, Reihenfolge, Anzeige ----------
   var dlg = document.getElementById('settings');
